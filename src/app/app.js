@@ -23,7 +23,7 @@ import { contextoStateX } from "@/Context/ProviderStateX.js";
 import ModalEditarTareaSemana from "@/components/modals/ModalEditarTareaSemana.js";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
 import SeccionObjetivo from "@/components/visualization/Objetivo.js";
-import useEjecutarDadaSemana from "@/hooks/useEjecucionCadaSemana.js";
+import EditarTareaModal from "@/components/modals/EditarTareaModal.js";
 
 function App() {
 

@@ -1,3 +1,5 @@
+
+import {X} from "lucide-react"
 function ModalEditarTareaSemana ({
   setEditandoTareaSemanal,
   editandoTareaSemanal,

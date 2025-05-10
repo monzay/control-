@@ -1,5 +1,6 @@
 // aun no lo estamos utilizando hasta que se conectado con un servidor web 
 
+import { Medal } from 'lucide-react';
 {usuarios.slice(0, 3).map((usuario, index) => (
     <div key={usuario.id} className="flex items-center gap-3">
       <div className="relative">

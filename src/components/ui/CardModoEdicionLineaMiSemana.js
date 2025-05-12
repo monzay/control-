@@ -8,6 +8,7 @@
  */
 
 
+import { formatearYValidarHora } from "@/function/FormatearYValidarHora"
 import { Save,X  } from "lucide-react"
 
 function CardModoEdicionLineaMiSemana ({
@@ -38,14 +39,12 @@ function CardModoEdicionLineaMiSemana ({
         </td>
         <td className="py-3 px-3">
           <input
-            type="number"
-            min="0.25"
-            step="0.25"
+            type="text"
             value={editandoEnLinea.duracion}
             onChange={(e) =>
               setEditandoEnLinea({
                 ...editandoEnLinea,
-                duracion: Number.parseFloat(e.target.value),
+                duracion:formatearYValidarHora(e.target.value),
               })
             }
             className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"

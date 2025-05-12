@@ -24,12 +24,12 @@ function ModalEditarTareaSemana ({
               <label className="block text-sm font-medium mb-1">Título</label>
               <input
                 type="text"
+                placeholder="00:00"
                 value={editandoTareaSemanal.titulo}
                 onChange={(e) => setEditandoTareaSemanal({ ...editandoTareaSemanal, titulo: e.target.value })}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-1">Día</label>
               <select

@@ -11,7 +11,7 @@ function useEjecutarDadaSemana(callback) {
             if(!localStorage.getItem("ultimaSeman")){
                 localStorage.setItem("ultimaSeman",semanActual)
             }
-            if(semanActual !== semanGuardada  ){
+            if(semanActual !== semanGuardada ){
                callback()
                localStorage.setItem(semanActual)
               }

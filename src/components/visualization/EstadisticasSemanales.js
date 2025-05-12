@@ -2,37 +2,17 @@ import { contextoStateX } from "@/Context/ProviderStateX";
 import FechaModulo from "@/function/FechaModulo";
 import useEjecutarDadaSemana from "@/hooks/useEjecucionCadaSemana";
 import { useContext, useEffect, useState } from "react";
-import { jsx } from "react/jsx-runtime";
 
 function EstadisticasSemanales({ tareasSemana, diasSemana }) {
   const [estadisticas, setEstadisticas] = useState();
- 
+  const [semanaSeleccionada,setSemanaSeleccionada] = useState(FechaModulo.obtenerNumeroSemana())
 
 
-   const estadisticasFiltrasPorSemana  = (nunSemana)=>{
-     try {
-      const z = JSON.parse( localStorage.getItem("estadisticasSemanales"))
-      if(z.length < 1){
-        const obj  = {
-          estadisticas : tareasSemana,
-          semana:FechaModulo.obtenerNumeroSemana()
-       }
-            localStorage.setItem("estadisticasSemanales",JSON.stringify([obj]))
-      }
-
-        if(!nunSemana){
-           const c = JSON.parse(  localStorage.getItem("estadisticasSemanales"))
-          const res = c.filter(semana => semana.semana === FechaModulo.obtenerNumeroSemana())
-          return calcularEstadisticasSemanales(res.estadisticas)
-        }else{
-          const c = JSON.parse(  localStorage.getItem("estadisticasSemanales"))
-          const res = c.filter(semana => semana.semana === nunSemana)
-          return calcularEstadisticasSemanales(res.estadisticas)
-        }
-     } catch (error) {
-      console.log(error)
-     }
-   }
+function filtrarTareasSemanales () {
+   const dataSemanas =   JSON.parse(localStorage.getItem(""))
+   const semanaSec =  dataSemanas.filter(semana => semana.semana ===  semanaSeleccionada)
+  return  semanaSec.estadisticas
+}
 
   const calcularEstadisticasSemanales = (arrTareasSemana) => {
     // Total de tareas completadas y no completadas
@@ -123,25 +103,24 @@ function EstadisticasSemanales({ tareasSemana, diasSemana }) {
     };
   };
 
-  // manetener el estado en el useeffect par que se  actualice
   useEffect(() => {
     setEstadisticas(cal())
   }, [tareasSemana, diasSemana]);
 
-  // hook para ejecutar todas las semanas
-  // guardamos todas estadisticas  de toda semana cada semana
 
-
-  //useEjecutarDadaSemana(() => {
-   // const estadisticas = {
-/*       estadisticas: calcularEstadisticasSemanales(tareasSemana).estadisticasPorDia,
+  useEjecutarDadaSemana(() => {
+   const estadisticas = {
+      estadisticas: calcularEstadisticasSemanales(tareasSemana).estadisticasPorDia,
       semana: localStorage.getItem("ultimaSeman"),
     };
+
     const res = JSON.parse(localStorage.getItem("estadisticasSemanales"));
     const add = res.push(estadisticas);
     localStorage.setItem("estadisticasSemanales", JSON.stringify(add));
   });
- */
+
+  
+
   if (!estadisticas) {
     return <div>Cargando estadísticas...</div>;
   }

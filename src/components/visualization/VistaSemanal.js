@@ -410,6 +410,7 @@ function VistaSemanal({
                           className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
                           disabled={!nuevaTareaSemanal.titulo.trim()}
                         >
+
                           Guardar
                         </button>
                       </div>

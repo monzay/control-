@@ -42,7 +42,6 @@ function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
         totalPorDia > 0
           ? Math.round((completadasPorDia / totalPorDia) * 100)
           : 0;
-
       return {
         dia,
         contadorCompletadas: completadasPorDia,
@@ -109,7 +108,6 @@ function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
     setEstadisticas(cal());
   }, [tareasSemana, diasSemana]);
 
-
   const reiniciarTareasSemanales = () => {
     const tareaSemanaReiniciadas = tareasSemana.map((t) =>
       typeof t.completada === "boolean" ? { ...t, completada: false } : t
@@ -118,23 +116,28 @@ function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
     setTareasSemana(tareaSemanaReiniciadas);
   };
 
-  useEjecutarDadaSemana(() => {
-    reiniciarTareasSemanales();
+  const guarEstadisticasSemanales = () => {
     const estadisticas = {
       estadisticas:
         calcularEstadisticasSemanales(tareasSemana).estadisticasPorDia,
       semana: localStorage.getItem("ultimaSeman"),
     };
 
-    const res = JSON.parse(localStorage.getItem("estadisticasSemanales"));
-    const add = res.push(estadisticas);
-    localStorage.setItem("estadisticasSemanales", JSON.stringify(add));
+    const estadisticasLocales  =  JSON.parse(localStorage.getItem("estadisticasSemanales"))
+    estadisticasLocales.push(estadisticas)
+    localStorage.setItem("estadisticasSemanales",JSON.stringify(estadisticasLocales))
+  };
+
+
+
+  useEjecutarDadaSemana(() => {
+    guarEstadisticasSemanales();
+    reiniciarTareasSemanales();
   });
 
   if (!estadisticas) {
     return <div>Cargando estadísticas...</div>;
   }
-
 
   const obtenerColorBarra = (tasa) => {
     if (tasa > 75) return "bg-gradient-to-r from-green-400 to-green-300";

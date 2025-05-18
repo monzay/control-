@@ -7,7 +7,9 @@ function ModalEditarTareaSemana ({
   guardarTareaEditadaSemanal,
 
 }){
+ 
 
+  
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
@@ -18,7 +20,6 @@ function ModalEditarTareaSemana ({
               <X className="h-5 w-5" />
             </button>
           </div>
-
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Título</label>
@@ -54,6 +55,8 @@ function ModalEditarTareaSemana ({
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
+
+            
 
             <div>
               <label className="block text-sm font-medium mb-1">Duración (horas)</label>

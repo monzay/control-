@@ -3,16 +3,19 @@ import FechaModulo from "@/function/FechaModulo";
 import useEjecutarDadaSemana from "@/hooks/useEjecucionCadaSemana";
 import { useContext, useEffect, useState } from "react";
 
-function EstadisticasSemanales({ tareasSemana, diasSemana }) {
+function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
   const [estadisticas, setEstadisticas] = useState();
-  const [semanaSeleccionada,setSemanaSeleccionada] = useState(FechaModulo.obtenerNumeroSemana())
+  const [semanaSeleccionada, setSemanaSeleccionada] = useState(
+    FechaModulo.obtenerNumeroSemana()
+  );
 
-
-function filtrarTareasSemanales () {
-   const dataSemanas =   JSON.parse(localStorage.getItem(""))
-   const semanaSec =  dataSemanas.filter(semana => semana.semana ===  semanaSeleccionada)
-  return  semanaSec.estadisticas
-}
+  function filtrarTareasSemanales() {
+    const dataSemanas = JSON.parse(localStorage.getItem(""));
+    const semanaSec = dataSemanas.filter(
+      (semana) => semana.semana === semanaSeleccionada
+    );
+    return semanaSec.estadisticas;
+  }
 
   const calcularEstadisticasSemanales = (arrTareasSemana) => {
     // Total de tareas completadas y no completadas
@@ -57,7 +60,6 @@ function filtrarTareasSemanales () {
       estadisticasPorDia,
     };
   };
-
 
   const cal = () => {
     // Total de tareas completadas y no completadas
@@ -104,13 +106,23 @@ function filtrarTareasSemanales () {
   };
 
   useEffect(() => {
-    setEstadisticas(cal())
+    setEstadisticas(cal());
   }, [tareasSemana, diasSemana]);
 
 
+  const reiniciarTareasSemanales = () => {
+    const tareaSemanaReiniciadas = tareasSemana.map((t) =>
+      typeof t.completada === "boolean" ? { ...t, completada: false } : t
+    );
+
+    setTareasSemana(tareaSemanaReiniciadas);
+  };
+
   useEjecutarDadaSemana(() => {
-   const estadisticas = {
-      estadisticas: calcularEstadisticasSemanales(tareasSemana).estadisticasPorDia,
+    reiniciarTareasSemanales();
+    const estadisticas = {
+      estadisticas:
+        calcularEstadisticasSemanales(tareasSemana).estadisticasPorDia,
       semana: localStorage.getItem("ultimaSeman"),
     };
 
@@ -119,11 +131,10 @@ function filtrarTareasSemanales () {
     localStorage.setItem("estadisticasSemanales", JSON.stringify(add));
   });
 
-  
-
   if (!estadisticas) {
     return <div>Cargando estadísticas...</div>;
   }
+
 
   const obtenerColorBarra = (tasa) => {
     if (tasa > 75) return "bg-gradient-to-r from-green-400 to-green-300";

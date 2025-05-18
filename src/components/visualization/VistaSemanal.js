@@ -449,6 +449,7 @@ function VistaSemanal({
         {/* Panel de estadísticas */}
         <div className="hidden md:block">
           <EstadisticasSemanales
+          setTareasSemana={setTareasSemana}
             tareasSemana={tareasSemana}
             diasSemana={diasSemana}
           />

@@ -19,6 +19,9 @@ function VisualizacionDias({
   // Configuración para que se vea como la imagen de referencia
   const anioActual = new Date().getFullYear();
   const [diaHover, setDiaHover] = useState(null);
+  const { todosLosDias } = useContext(ContextoDias); // return (objeto)
+  const [diaDeLaNot,setDiaDeLaNota] = useState(0)
+  
 
   // Calcular porcentaje de tareas completadas por día
   const calcularPorcentajeCompletadoPorDia = (dia) => {
@@ -56,7 +59,6 @@ function VisualizacionDias({
     }).length;
 
     const totalCompletadas = completadasSemana + completadasRegulares;
-    console.log((totalCompletadas / todasLasTareasDelDia.length) * 100);
     return (totalCompletadas / todasLasTareasDelDia.length) * 100;
   };
 
@@ -67,80 +69,79 @@ function VisualizacionDias({
   };
 
   // Obtener color basado en nivel de actividad con tonos de verde
-  const obtenerColorActividad = (dia) => {
-    // Verificar si es una fecha importante
-    const fechaImportante = obtenerInfoFechaImportante(dia);
+ const obtenerColorActividad = (dia) => {
+  const fechaImportante = obtenerInfoFechaImportante(dia);
+  const fechaDia = FechaModulo.obtenerFechaDia(dia);
 
-    if (fechaImportante) {
-      if (fechaImportante.tipo === "habito-fin") return "bg-purple-500"; // Color para fin de hábito
-      if (fechaImportante.tipo === "nota") return "bg-blue-500"; // Color para recordatorio de nota
-      return "bg-yellow-500"; // Color para otras fechas importantes
-    }
+  // 1. Verificar si es una fecha importante
+  if (fechaImportante) {
+    const coloresPorTipo = {
+      "habito-fin": "bg-purple-500",
+      "nota": "bg-blue-500",
+    };
+    
+    return coloresPorTipo[fechaImportante.tipo] || "bg-yellow-500";
+  }
 
-    // Si el día es futuro (después del día actual), devolver gris opaco
-    if (dia > diaActualDelAnio) {
-      return "bg-gray-800";
-    }
+  // validad si es  de  tipo nota  y habito  y  si tambien se paso por enciama de una nota par mostrar la cantidad de dias antes de la fecha que el usuario  
+  if(fechaImportante.tipo  && false  ){
+    return   "bg-red-500"
+      
+  }
 
-    // Obtener el porcentaje de tareas completadas para este día desde localStorage o calcularlo
-    const fechaDia = FechaModulo.obtenerFechaDia(dia);
-    let porcentajeCompletado = 0;
+  // 2. Si el día es futuro
+  if (dia > diaActualDelAnio) return "bg-gray-800";
 
-    // Intentar obtener del localStorage primero
-    if (typeof window !== "undefined") {
-      // Obtener el array de datos de días desde localStorage
-      const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
-      let datosDias = [];
+  // 3. Obtener el porcentaje de completado
+  let porcentajeCompletado = 0;
 
-      if (datosAlmacenados) {
-        datosDias = JSON.parse(datosAlmacenados);
-        // Buscar el día en el array
-        const datoDia = datosDias.find((d) => d.fecha === fechaDia);
-        if (datoDia) {
-          porcentajeCompletado = datoDia.porcentaje;
-        } else {
-          // Si no existe en el array, calcularlo
-          porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia);
+  const obtenerPorcentajeDesdeStorage = () => {
+    const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
+    if (!datosAlmacenados) return null;
 
-          // Añadir al array y guardar en localStorage
-          datosDias.push({
-            fecha: fechaDia,
-            porcentaje: porcentajeCompletado,
-            dia,
-            mensaje:null
-          });
-          localStorage.setItem(
-            "datos-dias-porcentajes",
-            JSON.stringify(datosDias)
-          );
-        }
-      } else {
-        // Si no existe el array en localStorage, crearlo
-        porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia);
-        datosDias = [
-          { fecha: fechaDia, porcentaje: porcentajeCompletado, dia },
-        ];
-        localStorage.setItem(
-          "datos-dias-porcentajes",
-          JSON.stringify(datosDias)
-        );
-      }
-    } else {
-      // Fallback para SSR
-      porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia);
-    }
-
-    // Para días pasados o el día actual, usar el porcentaje de completado con tonos de verde
-    if (porcentajeCompletado < 25) {
-      return "bg-gradient-to-r from-green-900 to-green-800"; // Verde muy oscuro
-    } else if (porcentajeCompletado < 50) {
-      return "bg-gradient-to-r from-green-700 to-green-600"; // Verde oscuro
-    } else if (porcentajeCompletado < 75) {
-      return "bg-gradient-to-r from-green-500 to-green-400"; // Verde medio
-    } else {
-      return "bg-gradient-to-r from-green-400 to-green-300"; // Verde claro
+    try {
+      const datosDias = JSON.parse(datosAlmacenados);
+      return datosDias.find(d => d.fecha === fechaDia) || null;
+    } catch {
+      return null;
     }
   };
+
+  const guardarDatoEnStorage = (nuevoDato) => {
+    const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
+    let datosDias = [];
+
+    if (datosAlmacenados) {
+      try {
+        datosDias = JSON.parse(datosAlmacenados);
+      } catch {
+        datosDias = [];
+      }
+    }
+
+    datosDias.push(nuevoDato);
+    localStorage.setItem("datos-dias-porcentajes", JSON.stringify(datosDias));
+  };
+
+  if (typeof window !== "undefined") {
+    const datoExistente = obtenerPorcentajeDesdeStorage();
+    if (datoExistente) {
+      porcentajeCompletado = datoExistente.porcentaje;
+    } else {
+      porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia);
+      guardarDatoEnStorage({ fecha: fechaDia, porcentaje: porcentajeCompletado, dia, mensaje: null });
+    }
+  } else {
+    porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia); // SSR fallback
+  }
+
+  // 4. Devolver el color según el porcentaje
+  if (porcentajeCompletado < 25) return "bg-gradient-to-r from-green-900 to-green-800";
+  if (porcentajeCompletado < 50) return "bg-gradient-to-r from-green-700 to-green-600";
+  if (porcentajeCompletado < 75) return "bg-gradient-to-r from-green-500 to-green-400";
+  return "bg-gradient-to-r from-green-400 to-green-300";
+};
+
 
   // Obtener título para el tooltip
   const obtenerTituloTooltip = (dia) => {
@@ -150,33 +151,39 @@ function VisualizacionDias({
     }
 
     function mostrarMensajeTooltip(dayOfYear, year = 2025) {
-        const date = new Date(year, 0); // enero es el mes 0
-        date.setDate(dayOfYear);
-      
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-      
-        const fecha = `${yyyy}-${mm}-${dd}`;
-    const datosAlmacenados = JSON.parse(localStorage.getItem("datos-dias-porcentajes"))
-     const  dataActividad  =  datosAlmacenados.find(prev => prev.fecha === fecha )
-       if(dataActividad.mensaje !== null){
-           console.log("mensaje")
-           return `${dataActividad.mensaje}`
-       }else{
-         return `Día ${dia}`
-       }
-      }
-  return       `Día ${dia}` 
+      const date = new Date(year, 0); // enero es el mes 0
+      date.setDate(dayOfYear);
 
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+
+      const fecha = `${yyyy}-${mm}-${dd}`;
+      const datosAlmacenados = JSON.parse(
+        localStorage.getItem("datos-dias-porcentajes")
+      );
+      const dataActividad = datosAlmacenados.find(
+        (prev) => prev.fecha === fecha
+      );
+      if (dataActividad.mensaje !== null) {
+        console.log("mensaje");
+        return `${dataActividad.mensaje}`;
+      } else {
+        return `Día ${dia}`;
+      }
+    }
+    return `Día ${dia}`;
   };
 
 
-  const { todosLosDias } = useContext(ContextoDias); // return (objeto)ç
 
- 
+  const calcularDiasAntesDeLaNota = ()=> {
+       const fechaNota =  249
+       const cantidadDeDiasAntesDeLaNota =  30 // 1 mes 
+      return  fechaNota - cantidadDeDiasAntesDeLaNota
+  }
+  
 
- 
   return (
     <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg mb-6 overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
@@ -193,16 +200,17 @@ function VisualizacionDias({
         <div className="flex-1">
           {/* Cuadrícula de actividad */}
           <div className="grid grid-rows-7 grid-flow-col gap-1">
-            {todosLosDias.dias.map((_, index) => {
+            {Array.from({ length: 365 }).map((_, index) => {
               const dia = index + 1;
               return (
                 <div
                   key={index}
                   style={{ borderRadius: "1px" }}
-                  className={`w-3 h-3  ${obtenerColorActividad(
-                    dia
-                  )} relative cursor-pointer`}
-                  onMouseEnter={() => setDiaHover(dia)}
+                  className={`w-3 h-3  ${obtenerColorActividad( dia )} relative cursor-pointer  `  }
+                  onMouseEnter={() =>{
+                    setDiaDeLaNota(dia)
+                    setDiaHover(dia)
+                  }}
                   onMouseLeave={() => setDiaHover(null)}
                   onClick={() => {
                     // Al hacer clic en un día, seleccionar ese día en la semana si corresponde

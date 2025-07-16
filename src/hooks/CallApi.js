@@ -1,44 +1,93 @@
 import { useState, useCallback } from "react";
 
-export function CallApi (baseUrl = "") {
+// Función auxiliar para obtener el token del localStorage
+const obtenerToken = () => localStorage.getItem("accessToken");
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+// Función auxiliar para construir los headers, agregando el token si existe
+const construirHeaders = (headers = {}, token = null) => {
+    const headersFinales = {
+        "Content-Type": "application/json",
+        ...headers,
+    };
+    if (token) {
+        headersFinales["Authorization"] = `Bearer ${token}`;
+    }
+    return headersFinales;
+};
 
-  const request = useCallback(
-    async (endpoint, options = {}) => {
-      setLoading(true);
-      setError(null);
+// Función auxiliar para refrescar el token
+const refrescarToken = async () => {
+    const respuesta = await fetch("http://localhost:4000/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    if (!respuesta.ok) return null;
+    const datos = await respuesta.json();
+    localStorage.setItem("accessToken", datos.accessToken);
+    return datos.accessToken;
+};
 
-      try {
-        const { method = "GET", body, headers = {} } = options;
+export function CallApi(baseUrl = "") {
+    const [cargando, setCargando] = useState(false);
+    const [error, setError] = useState(null);
 
-        const response = await fetch(`${baseUrl}${endpoint}`, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            ...headers,
-          },
-          body: body ? JSON.stringify(body) : undefined,
-        });
+    const request = useCallback(
+        async (endpoint, opciones = {}) => {
+            setCargando(true);
+            setError(null);
 
-        const data = await response.json();
+            const { method = "GET", body, headers = {} } = opciones;
 
-        if (!response.ok) {
-          throw new Error(data.message || "Error inesperado en la API");
-        }
+            let token = obtenerToken();
+            let headersFinales = construirHeaders(headers, token);
 
-        return data;
-      } catch (err) {
-        console.error("API Error:", err.message);
-        setError(err.message || "Error desconocido");
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [baseUrl]
-  );
+            const hacerPeticion = async (headersUsar) => {
+                const respuesta = await fetch(`${baseUrl}${endpoint}`, {
+                    method,
+                    headers: headersUsar,
+                    body: body ? JSON.stringify(body) : undefined,
+                });
+                const datos = await respuesta.json();
+                return { respuesta, datos };
+            };
 
-  return { request, loading, error };
+            try {
+                // Primer intento de petición
+                let { respuesta, datos } = await hacerPeticion(headersFinales);
+
+                // Si el token expiró, intentamos refrescarlo y reintentamos la petición
+                if (respuesta.status === 401) {
+                    token = await refrescarToken();
+                    if (token) {
+                        headersFinales = construirHeaders(headers, token);
+                        ({ respuesta, datos } = await hacerPeticion(headersFinales));
+                    } else {
+                        window.location.href = "Login";
+                        return;
+                    }
+                }
+
+                // Si la respuesta no es exitosa, lanzamos un error
+                if (!respuesta.ok) {
+                    throw new Error(datos.message || "Error inesperado en la API");
+                }
+
+                return datos;
+            } catch (err) {
+                console.error("Error en la API:", err.message);
+                setError(err.message || "Error desconocido");
+                throw err;
+            } finally {
+                setCargando(false);
+            }
+        },
+        [baseUrl]
+    );
+
+    // Retornamos la función de petición y los estados de carga y error
+    return { request, loading: cargando, error };
 }
+
+
+

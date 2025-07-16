@@ -445,7 +445,7 @@ function VistaSemanal({
         />
 
         {/* Panel de Top Usuarios */}
-        <TopUsuarios usuarios={usuarios} />
+        <TopUsuarios />
 
         {/* Panel de estadísticas */}
         <div className="hidden md:block">

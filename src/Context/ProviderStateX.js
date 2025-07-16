@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from "react";
+import { CallApi } from "@/hooks/CallApi";
 
 // Creamos el contexto que vamos a exportar para usar en otros componentes
 export const contextoStateX = createContext(null)
@@ -42,10 +43,10 @@ export function ProviderStateX({ children }) {
     obtenerDesdeLocalStorage("fechas-importantes", [])
   )
 
-  // Estado para usuarios
+  // Estado para usuarios (vuelve a usar localStorage)
   const [usuarios, setUsuarios] = useState(() =>
     obtenerDesdeLocalStorage("usuarios", [])
-  )
+  );
 
   // Estado para tareas generales / hábitos
   const [tareas, setTareas] = useState(() =>
@@ -62,10 +63,10 @@ export function ProviderStateX({ children }) {
     guardarEnLocalStorage("fechas-importantes", fechasImportantes)
   }, [fechasImportantes])
 
-  // Efecto para guardar usuarios
+  // Efecto para guardar usuarios en localStorage
   useEffect(() => {
-    guardarEnLocalStorage("usuarios", usuarios)
-  }, [usuarios])
+    guardarEnLocalStorage("usuarios", usuarios);
+  }, [usuarios]);
 
   // Efecto para guardar tareas generales
   useEffect(() => {

@@ -1,14 +1,11 @@
 import Chat from "@/components/visualization/Chat";
 import { useState, useEffect, useContext } from "react";
-import { AnimatePresence } from "framer-motion";
 import Encabezado from "@/components/layout/Encabezado.js";
 import { X, Plus, Sparkles, PenTool } from "lucide-react";
 import MenuLateral from "@/components/layout/MenuLateral.js";
 import TopUsuarios from "@/components/visualization/TopUsuarios.js";
 import FechaModulo from "../function/FechaModulo.js";
 import UsuarioModulo from "../function/UsuarioModulo.js";
-import LoginForm from "@/components/forms/LoginForm.js";
-import RegisterForm from "@/components/forms/RegisterForm.js";
 import CrearHabitoModal from "@/components/modals/CrearHabitoModal.js";
 import CrearNotaModal from "@/components/modals/CrearNotaModal";
 import AnimacionModulo from "../function/Confeti.js";
@@ -23,11 +20,10 @@ import { contextoStateX } from "@/Context/ProviderStateX.js";
 import ModalEditarTareaSemana from "@/components/modals/ModalEditarTareaSemana.js";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
 import SeccionObjetivo from "@/components/visualization/Objetivo.js";
-import EditarTareaModal from "@/components/modals/EditarTareaModal.js";
+import EditarTareaModal from "@/components/modals/EditarTareaModal.js";4
+
 
 function App() {
-
-
   const [mostrarBienvenida, setMostrarBienvenida] = useState(false);
   const [mostrarMensajeDiario, setMostrarMensajeDiario] = useState(false);
   const [cargando, setCargando] = useState(true);

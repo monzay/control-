@@ -10,8 +10,6 @@ export default function Encabezado({
   setMenuAbierto,
   mostrarTareas,
   setMostrarTareas,
-  setMostrarLogin, // <-- Añadido
-  setMostrarRegistro, // <-- Añadido
 }) {
   const [autenticado, setAutenticado] = useState(false)
 
@@ -37,14 +35,12 @@ export default function Encabezado({
         {!autenticado && (
           <>
             <button
-              onClick={() => setMostrarLogin(true)}
               className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
             >
               <LogIn className="h-4 w-4" />
               <span className="hidden md:inline">Iniciar sesión</span>
             </button>
             <button
-              onClick={() => setMostrarRegistro(true)}
               className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
             >
               <UserPlus className="h-4 w-4" />

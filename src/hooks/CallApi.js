@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-
+import { useRouter } from "next/navigation"
 // Función auxiliar para obtener el token del localStorage
 const obtenerToken = () => localStorage.getItem("accessToken");
 
@@ -16,12 +16,14 @@ const construirHeaders = (headers = {}, token = null) => {
 };
 
 // Función auxiliar para refrescar el token
-const refrescarToken = async () => {
+async function refrescarToken()  {
     const respuesta = await fetch("http://localhost:4000/auth/refresh", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // para incluir las cookies 
     });
+
+    console.log(respuesta)
     if (!respuesta.ok) return null;
     const datos = await respuesta.json();
     localStorage.setItem("accessToken", datos.accessToken);
@@ -29,6 +31,8 @@ const refrescarToken = async () => {
 };
 
 export function CallApi(baseUrl = "") {
+
+    const router = useRouter()
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState(null);
 
@@ -36,7 +40,6 @@ export function CallApi(baseUrl = "") {
         async (endpoint, opciones = {}) => {
             setCargando(true);
             setError(null);
-
             const { method = "GET", body, headers = {} } = opciones;
 
             let token = obtenerToken();
@@ -55,7 +58,6 @@ export function CallApi(baseUrl = "") {
             try {
                 // Primer intento de petición
                 let { respuesta, datos } = await hacerPeticion(headersFinales);
-
                 // Si el token expiró, intentamos refrescarlo y reintentamos la petición
                 if (respuesta.status === 401) {
                     token = await refrescarToken();
@@ -63,14 +65,13 @@ export function CallApi(baseUrl = "") {
                         headersFinales = construirHeaders(headers, token);
                         ({ respuesta, datos } = await hacerPeticion(headersFinales));
                     } else {
-                        window.location.href = "Login";
+                        router.push("/Form/Login")
                         return;
                     }
                 }
-
                 // Si la respuesta no es exitosa, lanzamos un error
                 if (!respuesta.ok) {
-                    throw new Error(datos.message || "Error inesperado en la API");
+                    console.log(respuesta)
                 }
 
                 return datos;

@@ -72,7 +72,7 @@ function TopUsuarios() {
       ) : (
         <div className="space-y-3">
           {topUsuarios.map((usuario, index) => (
-            <div key={usuario.email || index} className="flex items-center gap-3">
+            <div key={index} className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white/10
                 ${index === 0 ? 'bg-yellow-400 text-black' : index === 1 ? 'bg-gray-400 text-black' : 'bg-amber-700'}`}
                 >
@@ -82,10 +82,6 @@ function TopUsuarios() {
                 <div className="flex items-center gap-1">
                   <p className="text-sm font-medium truncate">{usuario.nombre || 'Sin nombre'}</p>
                 </div>
-                <p className="text-xs text-white/50 flex items-center gap-1">
-                  <Medal className="h-3 w-3 text-emerald-400" />
-                  {usuario.email || 'Sin email'}
-                </p>
                 <p className="text-xs text-emerald-300 mt-1">
                   Promedio: <span className="font-bold">{usuario.promedio?.toFixed(2) ?? 0}%</span>
                 </p>

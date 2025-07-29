@@ -1,15 +1,49 @@
 
 import {X} from "lucide-react"
+import { useState } from "react";
+
+function validarHora(hora) {
+  const regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  return regex.test(hora);
+}
+
+function validarDuracion(duracion) {
+  const regex = /^([0-9]{1,2}):([0-5]\d)$/;
+  if (!regex.test(duracion)) return false;
+  const [h, m] = duracion.split(":").map(Number);
+  if (h > 10 || (h === 10 && m > 0)) return false;
+  if (h === 0 && m === 0) return false;
+  return true;
+}
+
 function ModalEditarTareaSemana ({
   setEditandoTareaSemanal,
   editandoTareaSemanal,
   diasSemana,
   guardarTareaEditadaSemanal,
-
 }){
- 
+  const [error, setError] = useState("");
 
-  
+  const handleGuardar = () => {
+    if (!editandoTareaSemanal.titulo.trim()) {
+      setError("El título no puede estar vacío.");
+      return;
+    }
+    if (!editandoTareaSemanal.dia) {
+      setError("El día no puede estar vacío.");
+      return;
+    }
+    if (!validarHora(editandoTareaSemanal.horaACompletar)) {
+      setError("La hora debe tener formato HH:mm y estar entre 00:00 y 23:59.");
+      return;
+    }
+    if (!validarDuracion(editandoTareaSemanal.duracion)) {
+      setError("La duración debe tener formato HH:mm y máximo 10:00.");
+      return;
+    }
+    setError("");
+    guardarTareaEditadaSemanal();
+  };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
@@ -25,7 +59,6 @@ function ModalEditarTareaSemana ({
               <label className="block text-sm font-medium mb-1">Título</label>
               <input
                 type="text"
-                placeholder="00:00"
                 value={editandoTareaSemanal.titulo}
                 onChange={(e) => setEditandoTareaSemanal({ ...editandoTareaSemanal, titulo: e.target.value })}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -45,33 +78,26 @@ function ModalEditarTareaSemana ({
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium mb-1">Hora de inicio</label>
+              <label className="block text-sm font-medium mb-1">Hora a completar</label>
               <input
                 type="time"
-                value={editandoTareaSemanal.horaInicio}
-                onChange={(e) => setEditandoTareaSemanal({ ...editandoTareaSemanal, horaInicio: e.target.value })}
+                value={editandoTareaSemanal.horaACompletar || ""}
+                onChange={(e) => setEditandoTareaSemanal({ ...editandoTareaSemanal, horaACompletar: e.target.value })}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
-
-            
-
             <div>
-              <label className="block text-sm font-medium mb-1">Duración (horas)</label>
+              <label className="block text-sm font-medium mb-1">Duración (HH:mm)</label>
               <input
-                type="number"
-                min="0.25"
-                step="0.25"
-                value={editandoTareaSemanal.duracion}
-                onChange={(e) =>
-                  setEditandoTareaSemanal({ ...editandoTareaSemanal, duracion: Number.parseFloat(e.target.value) })
-                }
+                type="text"
+                value={editandoTareaSemanal.duracion || ""}
+                onChange={(e) => setEditandoTareaSemanal({ ...editandoTareaSemanal, duracion: e.target.value })}
+                placeholder="Ej: 01:00"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
-
+            {error && <div className="text-red-400 text-xs mt-1 text-right">{error}</div>}
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setEditandoTareaSemanal(null)}
@@ -80,7 +106,7 @@ function ModalEditarTareaSemana ({
                 Cancelar
               </button>
               <button
-                onClick={guardarTareaEditadaSemanal}
+                onClick={handleGuardar}
                 className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 Guardar

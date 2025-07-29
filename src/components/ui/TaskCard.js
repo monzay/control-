@@ -7,7 +7,7 @@ export default function TaskCard({
   onToggleComplete,
   className = "",
 }) {
-  return (
+  return  (
     <div
       className={`backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg flex flex-col ${
         tarea.completada ? "border-emerald-500/30" : ""
@@ -16,12 +16,6 @@ export default function TaskCard({
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
-            {IconoModulo.obtenerIconoTarea(tarea.tipo)}
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${IconoModulo.obtenerClaseColorPrioridad(tarea.prioridad)}`}
-            >
-              P{tarea.prioridad}
-            </span>
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -40,13 +34,13 @@ export default function TaskCard({
         </div>
 
         <h3
-          className={`text-lg font-medium mb-1 ${tarea.completada ? "line-through text-white/50" : ""}`}
+          className={`text-lg font-medium mb-1 break-words whitespace-pre-line ${tarea.completada ? "line-through text-white/50" : ""}`}
         >
           {tarea.titulo}
         </h3>
 
         {tarea.descripcion && (
-          <p className="text-sm text-white/70 mb-3">{tarea.descripcion}</p>
+          <p className="text-sm text-white/70 mb-3 break-words whitespace-pre-line">{tarea.descripcion}</p>
         )}
 
         <div className="mt-auto pt-3 flex items-center justify-between">
@@ -72,7 +66,6 @@ export default function TaskCard({
               </div>
             )}
           </div>
-
           <button
             onClick={() => {
               if (!tarea.completada) {

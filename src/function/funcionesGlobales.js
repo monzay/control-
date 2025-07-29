@@ -48,7 +48,7 @@ const funcionesGlobales = {
       console.log(`${h}:${m}:${s}`);
     }, 1000);
   },
-  AnimacionModulo : ()=>  {
+  AnimacionModulo: {
     lanzarConfeti: () => {
       confetti({
         particleCount: 100,

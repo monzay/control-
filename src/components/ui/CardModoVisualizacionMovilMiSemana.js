@@ -1,32 +1,34 @@
-import { Play, Edit, Trash2, Check } from "lucide-react";
+import { Check, Play, Edit, Trash2 } from "lucide-react";
 import AnimacionModulo from "@/function/Confeti";
 import FechaModulo from "@/function/FechaModulo";
-import { useContext,useState } from "react";
-import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas";
+import { useState } from "react";
 import funcionesGlobales from "@/function/funcionesGlobales";
-import { contextoStateX } from "@/Context/ProviderStateX";
-import alternarTareaSemanal from "@/function/ActualizarActividad";
+import { useActividad } from "@/Context/ActividadContext";
+import { DateTime } from "luxon";
+function CardModoVisualizacionMovilMiSemana({
+  tarea,
+  iniciarTemporizadorTarea,
+  iniciarEdicionEnLinea,
+  eliminarTareaSemanal,
+  desactivar,
+  completarTarea
+}) {
+  const [diaActual] = useState(funcionesGlobales.obtenerNombreDelDia);
 
-function CardModoVisualizacionMovilMiSemana ({
-    tarea,
-    iniciarTemporizadorTarea,
-    iniciarEdicionEnLinea,
-    eliminarTareaSemanal
-}){
-
-  const [diaActual, setDiaActual] = useState(funcionesGlobales.obtenerNombreDelDia());
-  const {setVolverCargarTareasFiltradas} = useContext(ContextVolverACargarTareasFiltradas)
-  const {setTareasSemana,tareasSemana} = useContext(contextoStateX)
+  const {refrescarActividades} = useActividad()
 
 
-  function ejecutarFuncionBtnTareaCompletada(){
-    if(diaActual ===  tarea.dia){
+  
+
+   function ejecutarFuncionBtnTareaCompletada() {
+    if (diaActual === tarea.dia) {
       if (!tarea.completada) {
-        AnimacionModulo.lanzarConfeti();
-        alternarTareaSemanal(tarea.id,setTareasSemana)
-        setVolverCargarTareasFiltradas(prev =>  !prev)
+          AnimacionModulo.lanzarConfeti();
+           completarTarea(tarea.id);
       }
-    }else  alert(" ya paso el dia ")
+    } else {
+      alert("Ya pasó el día para completar esta tarea");
+    }
   }
 
    
@@ -85,21 +87,24 @@ function CardModoVisualizacionMovilMiSemana ({
             onClick={() => iniciarTemporizadorTarea(tarea)}
             className="text-white/50 hover:text-emerald-400 p-1 rounded-full transition-colors"
             title="Iniciar tarea"
+            disabled={desactivar}
           >
             <Play className="h-4 w-4" />
           </button>
           <button
             onClick={() => iniciarEdicionEnLinea(tarea)}
             className="text-white/50 hover:text-emerald-400 p-1 rounded-full transition-colors"
+            disabled={desactivar}
           >
             <Edit className="h-4 w-4" />
           </button>
           <button
-            onClick={() =>{
-              setVolverCargarTareasFiltradas(prev =>  !prev)
-              eliminarTareaSemanal(tarea.id)
+            onClick={ () => {
+               eliminarTareaSemanal(tarea.id)
+               refrescarActividades() 
             }}
             className="text-white/50 hover:text-emerald-400 p-1 rounded-full transition-colors"
+            disabled={desactivar}
           >
             <Trash2 className="h-4 w-4" />
           </button>

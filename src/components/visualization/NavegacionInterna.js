@@ -6,17 +6,17 @@ import {
   MessageCircle,
   Settings,
 } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 const vistas = [
   { id: "semana", label: "Mi Semana", icon: CalendarDays },
   { id: "todas", label: "Todas las tareas", icon: Home },
-  { id: "habitos", label: "Hábitos", icon: Sparkles },
+  { id: "habitos", label: "habitos", icon: Sparkles },
   { id: "notas", label: "Notas", icon: PenTool },
-  { id: "chats", label: "Chats", icon: MessageCircle },
-  { id: "Objetivo", label: "Objetivo", icon: MessageCircle },
 ]
 
 function NavegacionInterna({ vistaActiva, setVistaActiva }) {
+  const router = useRouter();
   // Función para definir las clases dinámicamente
   const getClaseBoton = (vista) =>
     `w-full flex items-center gap-2 p-2 rounded-lg text-sm ${
@@ -24,7 +24,6 @@ function NavegacionInterna({ vistaActiva, setVistaActiva }) {
         ? "bg-emerald-600 text-white"
         : "text-white/60 hover:text-white hover:bg-white/5"
     }`
-
   return (
     <nav className="flex-1 p-4">
       <div className="mb-6">
@@ -47,7 +46,10 @@ function NavegacionInterna({ vistaActiva, setVistaActiva }) {
       </div>
 
       <div className="mt-auto pt-4 border-t border-white/5">
-        <button className="w-full flex items-center gap-2 p-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5">
+        <button
+          className="w-full flex items-center gap-2 p-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5"
+          onClick={() => router.push('/Secciones/Configuracion')}
+        >
           <Settings className="h-4 w-4" />
           <span>Configuración</span>
         </button>

@@ -1,15 +1,8 @@
-/**
- * Componente que representa una fila en modo edición para una tarea de Mi Semana
- * @param {Object} editandoEnLinea - Estado que contiene los datos de la tarea en edición
- * @param {Function} setEditandoEnLinea - Función para actualizar el estado de edición
- * @param {Object} tarea - Objeto con los datos de la tarea original
- * @param {Function} guardarTareaEditadaEnLinea - Función para guardar los cambios
- * 
- */
 
 
 import { formatearYValidarHora } from "@/function/FormatearYValidarHora"
 import { Save,X  } from "lucide-react"
+import { use, useEffect } from "react"
 
 function CardModoEdicionLineaMiSemana ({
   editandoEnLinea,
@@ -17,6 +10,9 @@ function CardModoEdicionLineaMiSemana ({
   tarea,
   guardarTareaEditadaEnLinea
 }){
+
+  
+
     return (
         <>
         <td className="py-3 px-3">
@@ -30,9 +26,9 @@ function CardModoEdicionLineaMiSemana ({
         <td className="py-3 px-3">
           <input
             type="time"
-            value={editandoEnLinea.horaInicio}
+            value={editandoEnLinea.horaACompletar}
             onChange={(e) =>
-              setEditandoEnLinea({ ...editandoEnLinea, horaInicio: e.target.value })
+              setEditandoEnLinea({ ...editandoEnLinea, horaACompletar: e.target.value })
             }
             className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />

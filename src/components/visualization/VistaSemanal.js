@@ -1,15 +1,11 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useLayoutEffect } from "react";
 import VisualizacionDias from "./VisualizacionDias.js";
-import { Play, Edit, Trash2, Check } from "lucide-react";
-
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Sparkles } from "lucide-react";
 import TopUsuarios from "./TopUsuarios.js";
 import EstadisticasSemanales from "./EstadisticasSemanales.js";
 import CardDiaSemana from "../ui/CardDiaSemana.js";
 import Cronometro from "../ui/Cronometro.js";
 
-import AnimacionModulo from "@/function/Confeti.js";
-import FechaModulo from "@/function/FechaModulo.js";
 import CardModoEdicionLineaMiSemana from "../ui/CardModoEdicionLineaMiSemana.js";
 import CardModoVisualizacionMiSemana from "../ui/CardModoVisualizacionMiSemana.js";
 import CardFilaAgregarNuevaTareaMiSemana from "../ui/CardFilaAgragarNuevaTareaMiSemana.js";
@@ -19,15 +15,15 @@ import BtnAgregarMiSemana from "../ui/BtnAgragarMiSemana.js";
 import CardModoEdicionMovilMiSemana from "../ui/CardModoEdicionMovilMiSemana.js";
 import CardModoVisualizacionMovilMiSemana from "../ui/CardModoVisualizacionMovilMiSemana.js";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
-import funcionesGlobales from "@/function/funcionesGlobales.js";
 import { formatearYValidarHora } from "@/function/FormatearYValidarHora.js";
+import { useSemanas } from "@/Context/SemanasContext";
+import { useHistorial } from "@/Context/HistorialContext.js";
 
 function VistaSemanal({
   diasSemana,
   diaSemanaSeleccionado,
   setDiaSemanaSeleccionado,
   tareasSemanaFiltradas,
-  setEditandoTareaSemanal,
   eliminarTareaSemanal,
   tareasSemana,
   setTareasSemana,
@@ -37,7 +33,6 @@ function VistaSemanal({
   diaActualDelAnio,
   agregandoTareaSemanal,
   setAgregandoTareaSemanal,
-  usuarios,
   horaActual,
   fechasImportantes,
   setVistaActiva,
@@ -51,10 +46,29 @@ function VistaSemanal({
     duracion: "01:00",
   });
 
+  const { crearHistorial } = useHistorial();
+
+  const completarTarea = async (tareaId) => {
+    try {
+      await crearHistorial(tareaId);
+      setTareasSemana(prev => prev.map(t => 
+        t.id === tareaId ? { ...t, completada: true } : t
+      ));
+    } catch (error) {
+      console.error("Error al completar la tarea:", error);
+    }
+  };
+
+
+  const diaActual = new Date()
+    .toLocaleDateString("es-ES", { weekday: "long" })
+    .toLowerCase();
+  // const desactivar = diaSemanaSeleccionado !== diaActual; // Eliminar esta línea
+
   const { setVolverCargarTareasFiltradas } = useContext(
     ContextVolverACargarTareasFiltradas
   );
-
+  const { crearSemana, actualizarSemana, clonarDia } = useSemanas();
   const [editandoEnLinea, setEditandoEnLinea] = useState(null);
 
   const calcularHorasTotales = () => {
@@ -107,51 +121,49 @@ function VistaSemanal({
   };
 
   // Función para agregar nueva tarea semanal
-  const agregarTareaSemanal = () => {
+  const agregarTareaSemanal = async () => {
     if (nuevaTareaSemanal.titulo.trim() === "") return;
+    try {
 
-    const tareaSemanal = {
-      id: `w${Date.now()}`,
-      titulo: nuevaTareaSemanal.titulo,
-      dia: nuevaTareaSemanal.dia,
-      horaInicio: nuevaTareaSemanal.horaInicio,
-      duracion: nuevaTareaSemanal.duracion,
-      completada: false,
-      contadorCompletadas: 0,
-      contadorNoCompletadas: 0,
-      ultimaSemanReinicio: numeroSemanaActual,
-    };
+      console.log(nuevaTareaSemanal)
+      // Crear la actividad semanal usando el contexto
+      await crearSemana({
+        titulo: nuevaTareaSemanal.titulo,
+        horaACompletar: nuevaTareaSemanal.horaInicio,
+        duracion: nuevaTareaSemanal.duracion,
+        dia: diaSemanaSeleccionado
+      });
 
-    // Añadir la nueva tarea y ordenar por hora de inicio
-    const tareasActualizadas = [...tareasSemana, tareaSemanal].sort((a, b) => {
-      if (a.dia !== b.dia) return 0; // Solo ordenar dentro del mismo día
-      return a.horaInicio.localeCompare(b.horaInicio);
-    });
+      // Limpiar el formulario
+      setNuevaTareaSemanal({
+        titulo: "",
+        dia: diaSemanaSeleccionado,
+        horaInicio: "00:00",
+        duracion: "01:00",
+      });
 
-    setTareasSemana(tareasActualizadas);
-    setAgregandoTareaSemanal(false);
-    setVolverCargarTareasFiltradas((prev) => !prev);
-
-    setNuevaTareaSemanal({
-      titulo: "",
-      dia: diaSemanaSeleccionado,
-      horaInicio: "00:00",
-      duracion: "01:00",
-    });
+      // Cerrar el formulario
+      setAgregandoTareaSemanal(false);
+    } catch (error) {
+      console.error("Error al crear actividad semanal:", error);
+    }
   };
   // Función para guardar tarea editada en línea
 
-  const guardarTareaEditadaEnLinea = () => {
+  const guardarTareaEditadaEnLinea = async () => {
     if (!editandoEnLinea) return;
-    setTareasSemana((prev) =>
-      prev.map((tarea) =>
-        tarea.id === editandoEnLinea.id ? editandoEnLinea : tarea
-      )
-    );
-    setVolverCargarTareasFiltradas(prev => !prev )
 
-    
-    setEditandoEnLinea(null);
+    try {
+      await actualizarSemana(editandoEnLinea.id, {
+        titulo: editandoEnLinea.titulo,
+        horaACompletar: editandoEnLinea.horaACompletar,
+        duracion: editandoEnLinea.duracion,
+     
+      });
+      setEditandoEnLinea(null);
+    } catch (error) {
+      console.error("Error al actualizar semana:", error);
+    }
   };
 
   // Función para iniciar edición en línea
@@ -172,6 +184,21 @@ function VistaSemanal({
       setDiaSemanaSeleccionado(diaSemanaActual);
     }
   }, []);
+
+  function sumarHorasSemana(tareas) {
+    // Suma todas las duraciones en formato HH:mm y retorna total en minutos
+    return tareas.reduce((total, tarea) => {
+      if (!tarea.duracion) return total;
+      const [h, m] = tarea.duracion.split(":").map(Number);
+      return total + h * 60 + m;
+    }, 0);
+  }
+
+  function formatearMinutosAHoras(minutos) {
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
@@ -276,6 +303,7 @@ function VistaSemanal({
                             <CardModoVisualizacionMiSemana
                               setTareaId={setTareaId}
                               tarea={tarea}
+                              desactivar={false} // Siempre permitir acciones
                               iniciarTemporizadorTarea={
                                 iniciarTemporizadorTarea
                               }
@@ -284,6 +312,7 @@ function VistaSemanal({
                               setDiaSemanaSeleccionado={
                                 setDiaSemanaSeleccionado
                               }
+                              completarTarea={completarTarea}
                             />
                           )}
                         </tr>
@@ -304,8 +333,9 @@ function VistaSemanal({
                       <CardFilaAgregarNuevaTareaMiSemana
                         nuevaTareaSemanal={nuevaTareaSemanal}
                         setNuevaTareaSemanal={setNuevaTareaSemanal}
-                        agregarTareaSemanal={agregarTareaSemanal}
                         setAgregandoTareaSemanal={setAgregandoTareaSemanal}
+                        diaSemanaSeleccionado={diaSemanaSeleccionado}
+                        desactivar={false} // Siempre permitir crear tarea
                       />
                     )}
                   </tbody>
@@ -332,9 +362,11 @@ function VistaSemanal({
                           // Modo visualización para móviles
                           <CardModoVisualizacionMovilMiSemana
                             tarea={tarea}
+                            desactivar={false} // Siempre permitir acciones
                             iniciarTemporizadorTarea={iniciarTemporizadorTarea}
                             iniciarEdicionEnLinea={iniciarEdicionEnLinea}
                             eliminarTareaSemanal={eliminarTareaSemanal}
+                            completarTarea={completarTarea}
                           />
                         )}
                       </div>
@@ -431,6 +463,11 @@ function VistaSemanal({
         <BtnAgregarMiSemana
           setAgregandoTareaSemanal={setAgregandoTareaSemanal}
           agregandoTareaSemanal={agregandoTareaSemanal}
+          diasSemana={diasSemana}
+          onClonarDia={async (diaOrigen, diaDestino) => {
+            await clonarDia(diaOrigen, diaDestino);
+            // alert eliminado
+          }}
         />
       </div>
 
@@ -455,6 +492,31 @@ function VistaSemanal({
             diasSemana={diasSemana}
           />
         </div>
+      </div>
+      <div className="hidden md:block w-full mt-10">
+        {/* Resumen semanal de productividad */}
+        {(() => {
+          const minutosPlanificados = sumarHorasSemana(tareasSemana);
+          const tiempoTotalSemana = 7 * 24 * 60; // 168h en minutos
+          const porcentaje = (minutosPlanificados / tiempoTotalSemana) * 100;
+          return (
+            <div className="rounded-2xl bg-gradient-to-r from-emerald-700 to-green-400 p-8 shadow-2xl flex flex-col items-center border border-white/10">
+              <div className="flex items-center gap-3 mb-4">
+                <Sparkles className="text-white drop-shadow-lg" size={32} />
+                <span className="font-bold text-white text-2xl tracking-wide drop-shadow-lg">Productividad semanal</span>
+              </div>
+              <div className="text-5xl font-mono text-white font-extrabold drop-shadow-lg">{formatearMinutosAHoras(minutosPlanificados)} <span className="text-2xl font-normal">/ 168:00</span></div>
+              <div className="text-white/90 mt-2 text-lg">Horas planificadas esta semana</div>
+              <div className="w-full bg-white/20 rounded-full h-4 mt-6 mb-2 overflow-hidden">
+                <div
+                  className="bg-white h-4 rounded-full transition-all duration-500"
+                  style={{ width: `${porcentaje > 100 ? 100 : porcentaje}%` }}
+                />
+              </div>
+              <div className="text-white/80 mt-2 text-xl font-semibold">{porcentaje.toFixed(1)}% de productividad</div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

@@ -3,7 +3,6 @@ import { createContext, useState } from "react";
 export  const ContextoDias = createContext();
 
 export function ProviderDias  ({ children }) {
-
     
     const [todosLosDias,setTodosLosDias] =  useState({
         dias:Array.from({length:365}),

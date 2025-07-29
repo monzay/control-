@@ -3,6 +3,8 @@ import "./globals.css";
 import Encabezado from "@/components/layout/Encabezado";
 import { useContext } from "react";
 import { ContextoHeaderHorizontal } from "@/Context/ProviderHeaderHotizontal";
+import MensajeDiasRestantes from "@/components/ui/MensajeDiasRestantes";
+import { PerfilProvider } from "@/Context/PerfilContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,14 +22,15 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-
- 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <MensajeDiasRestantes />
+        <PerfilProvider>
+          {children}
+        </PerfilProvider>
       </body>
     </html>
   );

@@ -1,11 +1,14 @@
 "use client"
 import { useState, useEffect } from "react"
 
-function MensajeTodoLosDias({ setMostrarMensaje, objetivo }) {
+function MensajeDiasRestantes({ objetivo = "crear una agencia" }) {
+  const [show, setShow] = useState(false)
+  const [mostrarMensaje, setMostrarMensaje] = useState(true)
+
   // Calcular días restantes en el año actual
   const calcularDiasRestantesDelAnio = () => {
     const hoy = new Date()
-    const finAnio = new Date(hoy.getFullYear(), 11, 31) // 31 de diciembre del año actual
+    const finAnio = new Date(hoy.getFullYear(), 11, 31)
     const diferenciaMs = finAnio.getTime() - hoy.getTime()
     const diasRestantes = Math.ceil(diferenciaMs / (1000 * 60 * 60 * 24))
     return diasRestantes
@@ -16,7 +19,7 @@ function MensajeTodoLosDias({ setMostrarMensaje, objetivo }) {
   // Dividir el mensaje para resaltar el objetivo en verde
   const partesMensaje = [
     `Te quedan ${dias} ${dias === 1 ? "día" : "días"} de este año para lograr tu objetivo: `,
-    objetivo || "crear una agencia", // Usar el objetivo proporcionado o uno predeterminado
+    objetivo,
     "",
   ]
 
@@ -24,11 +27,22 @@ function MensajeTodoLosDias({ setMostrarMensaje, objetivo }) {
   const [textoMostrado, setTextoMostrado] = useState("")
   const [escrituraCompleta, setEscrituraCompleta] = useState(false)
 
+  // Mostrar solo una vez al día
+  useEffect(() => {
+    const hoy = new Date()
+    const hoyStr = hoy.toISOString().slice(0, 10)
+    const lastShown = localStorage.getItem("mensajeDiasRestantesShown")
+    if (lastShown !== hoyStr) {
+      setShow(true)
+      localStorage.setItem("mensajeDiasRestantesShown", hoyStr)
+    }
+  }, [])
+
   // Efecto de máquina de escribir
   useEffect(() => {
+    if (!show) return
     let indice = 0
-    const velocidadEscritura = 30 // milisegundos por caracter
-
+    const velocidadEscritura = 30
     const intervaloEscritura = setInterval(() => {
       if (indice < textoMensaje.length) {
         setTextoMostrado(textoMensaje.substring(0, indice + 1))
@@ -38,9 +52,10 @@ function MensajeTodoLosDias({ setMostrarMensaje, objetivo }) {
         setEscrituraCompleta(true)
       }
     }, velocidadEscritura)
-
     return () => clearInterval(intervaloEscritura)
-  }, [textoMensaje])
+  }, [textoMensaje, show])
+
+  if (!show || !mostrarMensaje) return null
 
   return (
     <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black w-screen h-screen">
@@ -103,4 +118,4 @@ function MensajeTodoLosDias({ setMostrarMensaje, objetivo }) {
   )
 }
 
-export default MensajeTodoLosDias
+export default MensajeDiasRestantes 

@@ -1,17 +1,12 @@
 import funcionesGlobales from "@/function/funcionesGlobales";
 import { useEffect } from "react";
 
-
 function useEjecutarUnaVezPorDia(callback) {
   useEffect(() => {
-    const hoy = funcionesGlobales.obtenerDiaHoy()
-    const ultimaEjecucion = localStorage.getItem("ultimaSesion");
-
-    if (ultimaEjecucion !== hoy) {
-      localStorage.setItem("ultimaSesion", hoy );
-      callback();
-    }
+    // Ejecutar el callback siempre que se monte el componente
+    // Esto simula el comportamiento de ejecución diaria
+    callback();
   }, []);
 }
 
-export default  useEjecutarUnaVezPorDia
+export default useEjecutarUnaVezPorDia

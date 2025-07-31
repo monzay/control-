@@ -49,6 +49,7 @@ function validarCampos(formulario) {
       "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial"
   }
 
+
   // Validación de caracteres peligrosos (prevención de inyección)
   const campos = ["email", "password"]
   campos.forEach((campo) => {

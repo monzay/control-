@@ -17,7 +17,6 @@ function EstadisticasSemanales({ tareasSemana }) {
     const obtenerEstadisticas = async () => {
       try {
         const data = await obtenerPorcentajePorDiaSemana();
-        console.log(data)
         if (data && data.porcentajePorDia) {
           const datosDia = data.porcentajePorDia.map((d) => ({
             dia: d.dia,
@@ -46,7 +45,7 @@ function EstadisticasSemanales({ tareasSemana }) {
     };
 
     obtenerEstadisticas();
-  }, [obtenerPorcentajePorDiaSemana, tareasSemana]);
+  }, [ tareasSemana]);
 
 
   if (!estadisticas) {

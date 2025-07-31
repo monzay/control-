@@ -13,6 +13,9 @@ const vistas = [
   { id: "todas", label: "Todas las tareas", icon: Home },
   { id: "habitos", label: "habitos", icon: Sparkles },
   { id: "notas", label: "Notas", icon: PenTool },
+  { id: "chat", label: "Chat", icon: PenTool },
+  { id: "canales", label: "Canales", icon: PenTool },
+  { id: "suscripcion", label: "Suscripciones", icon: PenTool },
 ]
 
 function NavegacionInterna({ vistaActiva, setVistaActiva }) {

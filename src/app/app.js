@@ -15,6 +15,7 @@ import { contextoStateX } from "@/Context/ProviderStateX.js";
 import ModalEditarTareaSemana from "@/components/modals/ModalEditarTareaSemana.js";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
 import EditarTareaModal from "@/components/modals/EditarTareaModal.js";
+import Canales from "@/components/canales/canales.js"
 
 import EditarNotaModal from "@/components/modals/EditarNotaModal";
 import { useNotas } from "@/Context/NotasContext";
@@ -22,15 +23,18 @@ import { NotasProvider } from "@/Context/NotasContext";
 import { ObjetivosProvider, useObjetivos } from "@/Context/ObjetivosContext";
 import { SemanasProvider, useSemanas } from "@/Context/SemanasContext";
 import { HistorialProvider } from "@/Context/HistorialContext";
-
+import { CanalProvider } from "@/Context/CanalContext"; // Importar CanalProvider y useCanal
 function App() {
   const [cargando, setCargando] = useState(true);
   const { notas, refrescarNotas, eliminarNota } = useNotas();
 
   const { objetivos, refrescarObjetivos, eliminarObjetivo, actualizarObjetivo } = useObjetivos();
   const { semanas, refrescarSemanas, actualizarSemana, eliminarSemana } = useSemanas();
-
+  const {refrescarActividades} = useActividad()
   useEffect(() => {
+    refrescarNotas();
+    refrescarObjetivos(); // <-- Esto hará la petición de objetivos al cargar la web
+    refrescarActividades();
     setCargando(false);
   }, []);
 
@@ -107,6 +111,7 @@ function App() {
     return () => clearInterval(verificacionDiaria);
   }, []);
 
+  
   // Unificar fechas importantes de notas y hábitos
   useEffect(() => {
     const fechasNotas = notas
@@ -286,13 +291,11 @@ function App() {
                 setVistaActiva={setVistaActiva}
                 setMenuAbierto={setMenuAbierto}
               />
-
               {/* Contenido principal */}
               <main className="flex-1 p-4 md:p-6 pt-2 relative z-10 overflow-x-hidden">
                 <>
                   {mostrarTareas && (
                     <div> 
-                      {vistaActiva === "habitos" }
                       {vistaActiva === "semana" ? (
                         // Vista de Mi Semana
                         <VistaSemanal
@@ -346,7 +349,7 @@ function App() {
                                   />
                                 ))}
                               </div>
-                             ) : (
+                             ) : vistaActiva === "habitos" ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-h-[400px] h-full flex-1">
                                 {
                                    objetivos.map((habito) => (
@@ -361,7 +364,9 @@ function App() {
                                   ))
                                 }
                               </div>
-                             ) }
+                             ) : vistaActiva === "canales" ? (
+                                <Canales></Canales>
+                             ) : null }
                           </div>
 
                           {/* Barra lateral con reloj y top usuarios */}
@@ -472,7 +477,6 @@ function App() {
               />
             )}
 
-
             {/* Botón flotante para crear tareas */}
             <div className="fixed bottom-6 right-6 z-40">
               <div className="relative group">
@@ -527,13 +531,11 @@ function App() {
 }
 
 
-
-
 import { ProviderStateX } from "@/Context/ProviderStateX";
 import { ProviderDias } from "@/Context/ProviderDias";
 import { ProviderHeaderHotizontal } from "@/Context/ProviderHeaderHotizontal";
 import { ProviderVolverCargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
-import { ActividadProvider } from "@/Context/ActividadContext";
+import { ActividadProvider, useActividad } from "@/Context/ActividadContext";
 export default function AppWithProviders(props) {
   return (
     <ProviderHeaderHotizontal>
@@ -545,7 +547,9 @@ export default function AppWithProviders(props) {
                 <SemanasProvider>
                   <HistorialProvider>
                     <ActividadProvider>
-                      <App {...props} />
+                      <CanalProvider>
+                        <App {...props} />
+                      </CanalProvider>
                     </ActividadProvider>
                   </HistorialProvider>
                 </SemanasProvider>

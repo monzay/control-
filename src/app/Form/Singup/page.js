@@ -102,6 +102,7 @@ export default function PaginaRegistro({ onClose, onSuccess }) {
             nombre: formulario.nombre,
             email: formulario.email,
             password: formulario.password,
+            zonaHoraria : Intl.DateTimeFormat().resolvedOptions().timeZone 
           },
         })
         setEnviando(false)

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { PenTool, X } from "lucide-react"
 import { useNotas } from "@/Context/NotasContext";
-import { contextoStateX } from "@/Context/ProviderStateX";
 
 function EditarNotaModal({ nota, onClose, onSuccess }) {
   const { actualizarNota } = useNotas();
@@ -12,7 +11,7 @@ function EditarNotaModal({ nota, onClose, onSuccess }) {
     cantidadDias: "",
   })
   const [error, setError] = useState("")
-  
+
   useEffect(() => {
     if (nota) {
       setNotaEditada({
@@ -23,6 +22,8 @@ function EditarNotaModal({ nota, onClose, onSuccess }) {
       })
     }
   }, [nota])
+  
+  
 
   const validarFormulario = () => {
     if (!notaEditada.titulo.trim()) {

@@ -1,5 +1,5 @@
 "use client"
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LogOut, User, Shield, Sliders, Menu, Edit2, Save, Loader2 } from "lucide-react";
 import { usePerfil } from "@/Context/PerfilContext";
@@ -62,6 +62,7 @@ export default function ConfiguracionPage() {
     }
   };
 
+
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-black">
       {/* Panel lateral (desktop) */}
@@ -120,7 +121,8 @@ export default function ConfiguracionPage() {
                   className={`flex items-center w-full px-4 py-3 rounded-lg transition-all font-medium text-base text-white/80 hover:bg-emerald-500/20 hover:text-emerald-300 focus:outline-none focus:bg-emerald-500/30 ${
                     opcionSeleccionada === op.key ? "bg-emerald-500/30 text-emerald-200" : ""
                   }`}
-                  onClick={() => { setOpcionSeleccionada(op.key); setMenuAbierto(false); }}
+                  onClick={() => {
+                     setOpcionSeleccionada(op.key); setMenuAbierto(false); }}
                 >
                   {op.icon}
                   {op.label}
@@ -141,15 +143,6 @@ export default function ConfiguracionPage() {
 
       {/* Panel principal */}
       <main className="flex-1 w-full p-4 md:p-12 flex flex-col justify-center overflow-y-auto">
-        <div className="mb-8">
-          <button
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold shadow border border-white/10 transition-all"
-            onClick={() => router.push("/")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            Volver a la app
-          </button>
-        </div>
         {opcionSeleccionada === "perfil" && (
           <section className="max-w-2xl w-full mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">Perfil</h2>

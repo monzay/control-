@@ -3,9 +3,9 @@ export const diasTotales = 365;
 export  const diasSemana = [
   "lunes",
   "martes",
-  "miércoles",
+  "miercoles",
   "jueves",
   "viernes",
-  "sábado",
+  "sabado",
   "domingo",
 ];

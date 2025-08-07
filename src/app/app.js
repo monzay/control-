@@ -536,6 +536,10 @@ import { ProviderDias } from "@/Context/ProviderDias";
 import { ProviderHeaderHotizontal } from "@/Context/ProviderHeaderHotizontal";
 import { ProviderVolverCargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
 import { ActividadProvider, useActividad } from "@/Context/ActividadContext";
+import ModernFlowChart from "./Secciones/Mapa/page.js";
+import { ReactFlowProvider } from "reactflow";
+
+
 export default function AppWithProviders(props) {
   return (
     <ProviderHeaderHotizontal>
@@ -548,7 +552,7 @@ export default function AppWithProviders(props) {
                   <HistorialProvider>
                     <ActividadProvider>
                       <CanalProvider>
-                        <App {...props} />
+                         <App {...props} />
                       </CanalProvider>
                     </ActividadProvider>
                   </HistorialProvider>

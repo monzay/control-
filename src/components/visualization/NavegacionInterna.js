@@ -10,12 +10,10 @@ import { useRouter } from "next/navigation";
 
 const vistas = [
   { id: "semana", label: "Mi Semana", icon: CalendarDays },
-  { id: "todas", label: "Todas las tareas", icon: Home },
   { id: "habitos", label: "habitos", icon: Sparkles },
   { id: "notas", label: "Notas", icon: PenTool },
-  { id: "chat", label: "Chat", icon: PenTool },
   { id: "canales", label: "Canales", icon: PenTool },
-  { id: "suscripcion", label: "Suscripciones", icon: PenTool },
+  { id: "mapa", label: "Mapa", icon: PenTool },
 ]
 
 function NavegacionInterna({ vistaActiva, setVistaActiva }) {
@@ -37,7 +35,10 @@ function NavegacionInterna({ vistaActiva, setVistaActiva }) {
           {vistas.map(({ id, label, icon: Icon }) => (
             <li key={id}>
               <button
-                onClick={() => setVistaActiva(id)}
+                onClick={() => {
+                  setVistaActiva(id)
+                  label == "Mapa" && router.push("/Secciones/Mapa")
+                }}
                 className={getClaseBoton(id)}
               >
                 <Icon className="h-4 w-4 text-emerald-400" />

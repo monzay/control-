@@ -1,6 +1,6 @@
 "use client"
 
-import { UserPlus } from "lucide-react"
+import { UserPlus, Eye, EyeOff } from "lucide-react"
 import { CallApi } from "@/hooks/CallApi"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -71,6 +71,8 @@ export default function PaginaRegistro({ onClose, onSuccess }) {
   })
   const [errores, setErrores] = useState({})
   const [enviando, setEnviando] = useState(false)
+  const [verPassword, setVerPassword] = useState(false)
+  const alternarVerPassword = () => setVerPassword((prev) => !prev)
   const { request, loading, error } = CallApi("http://localhost:4000/auth")
   const router = useRouter()
 
@@ -188,19 +190,30 @@ export default function PaginaRegistro({ onClose, onSuccess }) {
               <label htmlFor="password" className="block text-sm font-semibold text-emerald-200 mb-1">
                 Contraseña
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                minLength={8}
-                maxLength={64}
-                value={formulario.password}
-                onChange={manejarCambio}
-                className="w-full bg-black border border-emerald-700 rounded-xl px-4 py-2.5 text-white placeholder-emerald-300/60 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
-                placeholder="••••••••"
-                required
-                inputMode="text"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={verPassword ? "text" : "password"}
+                  minLength={8}
+                  maxLength={64}
+                  value={formulario.password}
+                  onChange={manejarCambio}
+                  className="w-full bg-black border border-emerald-700 rounded-xl px-4 py-2.5 text-white placeholder-emerald-300/60 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition pr-12"
+                  placeholder="••••••••"
+                  required
+                  inputMode="text"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={alternarVerPassword}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400 hover:text-emerald-200 focus:outline-none"
+                  aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {verPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               {errores.password && <p className="text-emerald-400 text-xs mt-1">{errores.password}</p>}
             </div>
             <div>

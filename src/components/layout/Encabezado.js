@@ -2,9 +2,9 @@
 import { Menu, X, LogIn, UserPlus, EyeOff, Eye } from "lucide-react"
 import { diasTotales } from "@/Varibles"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation";
 
 export default function Encabezado({
-  horaActual,
   diaActualDelAnio,
   menuAbierto,
   setMenuAbierto,
@@ -12,7 +12,8 @@ export default function Encabezado({
   setMostrarTareas,
 }) {
   const [autenticado, setAutenticado] = useState(false)
-
+  const router = useRouter()
+  
   useEffect(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("accessToken")
@@ -35,12 +36,14 @@ export default function Encabezado({
         {!autenticado && (
           <>
             <button
+              onClick={()=> router.push("/Form/Login")}
               className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
             >
               <LogIn className="h-4 w-4" />
               <span className="hidden md:inline">Iniciar sesión</span>
             </button>
             <button
+               onClick={()=> router.push("/Form/Singup")}
               className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
             >
               <UserPlus className="h-4 w-4" />

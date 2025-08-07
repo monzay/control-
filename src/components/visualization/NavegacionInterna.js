@@ -1,9 +1,7 @@
 import {
   CalendarDays,
-  Home,
   Sparkles,
   PenTool,
-  MessageCircle,
   Settings,
 } from "lucide-react"
 import { useRouter } from "next/navigation";

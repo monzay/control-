@@ -536,6 +536,8 @@ import { ProviderDias } from "@/Context/ProviderDias";
 import { ProviderHeaderHotizontal } from "@/Context/ProviderHeaderHotizontal";
 import { ProviderVolverCargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
 import { ActividadProvider, useActividad } from "@/Context/ActividadContext";
+import ModernFlowChart from "./Secciones/Mapa/page.js";
+import { ReactFlowProvider } from "reactflow";
 
 
 export default function AppWithProviders(props) {

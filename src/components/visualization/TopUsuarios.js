@@ -25,7 +25,7 @@ function TopUsuarios({ usuarios }) {
         </div>
       );
     }
-  },[])
+  },[isClient, usuarios])
 
   
     return (

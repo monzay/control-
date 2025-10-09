@@ -1,5 +1,7 @@
+"use client";
+
 import Chat from "@/components/visualization/Chat";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import Encabezado from "@/components/layout/Encabezado.js";
 import { X, Plus, Sparkles, PenTool } from "lucide-react";
@@ -26,7 +28,7 @@ import SeccionObjetivo from "@/components/visualization/Objetivo.js";
 import EditarTareaModal from "@/components/modals/EditarTareaModal.js";
 
 function App() {
-
+  const [isClient, setIsClient] = useState(false);
 
   const [mostrarBienvenida, setMostrarBienvenida] = useState(false);
   const [mostrarMensajeDiario, setMostrarMensajeDiario] = useState(false);
@@ -37,7 +39,9 @@ function App() {
     useState(false);
 
   useEffect(() => {
-    // Verificar si es la primera visita del usuario
+    setIsClient(true);
+    
+    // Verificar si es la primer visita del usuario
     const usuarioHaVisitado = localStorage.getItem("usuarioHaVisitado");
     // Verificar si el usuario tiene un objetivo guardado
     const objetivoGuardado = localStorage.getItem("objetivo");
@@ -186,7 +190,7 @@ function App() {
     ); // Verificar cada 24 horas
 
     return () => clearInterval(verificacionDiaria);
-  }, []);
+  }, [setTareasSemana]);
 
   // Sincronizar fechas de finalización con fechas importantes
   useEffect(() => {
@@ -194,7 +198,7 @@ function App() {
     const fechasFinTareas = tareas
       .filter(
         (tarea) =>
-          tarea.fechaFin &&
+          tarea && tarea.fechaFin && tarea.tipo &&
           !fechasImportantes.some(
             (fecha) =>
               fecha.idTarea === tarea.id && fecha.fecha === tarea.fechaFin
@@ -214,7 +218,7 @@ function App() {
     if (fechasFinTareas.length > 0) {
       setFechasImportantes((prev) => [...prev, ...fechasFinTareas]);
     }
-  }, [tareas]);
+  }, [tareas, fechasImportantes, setFechasImportantes]);
 
   //---------------------------------------------------------//
   // Añadir una nueva tarea
@@ -222,7 +226,7 @@ function App() {
     setTareas([...tareas, nuevaTarea]);
 
     // Si tiene fecha de finalización, crear una fecha importante
-    if (nuevaTarea.fechaFin) {
+    if (nuevaTarea.fechaFin && nuevaTarea.tipo) {
       const nuevaFecha = {
         id: `tarea-fin-${nuevaTarea.id}`,
         fecha: nuevaTarea.fechaFin,
@@ -257,7 +261,7 @@ function App() {
   // Guardar tarea editada
   const guardarTareaEditada = (tareaActualizada) => {
     // Actualizar fechas importantes si cambió la fecha de finalización
-    if (tareaActualizada.fechaFin !== undefined) {
+    if (tareaActualizada.fechaFin !== undefined && tareaActualizada.tipo) {
       // Eliminar fecha importante anterior
       setFechasImportantes((prev) =>
         prev.filter((fecha) => fecha.idTarea !== tareaActualizada.id)
@@ -335,7 +339,7 @@ function App() {
       );
     }
     actualizarActividad(diaSemanaSeleccionado)
-  },[tareasSemana])
+  },[tareasSemana, diaSemanaSeleccionado])
 
   // Iniciar edición de tarea
   const iniciarEditarTarea = (tarea) => {
@@ -372,6 +376,7 @@ function App() {
   // Alternar completado de tarea
   const alternarTarea = (id) => {
     const tareaAlternar = tareas.find((tarea) => tarea.id === id);
+    if (!tareaAlternar) return; // Safety check
     const estabaCompletada = tareaAlternar?.completada;
 
     // Si la tarea se está marcando como completada, mostrar animación
@@ -438,15 +443,26 @@ function App() {
     );
   };
   // Obtener tareas filtradas según la vista activa
-  const obtenerTareasFiltradas = () => {
+  const obtenerTareasFiltradas = useCallback(() => {
+    if (!tareas || !Array.isArray(tareas)) return [];
+    
+    // Filter out any invalid tasks first
+    const validTareas = tareas.filter(tarea => 
+      tarea && 
+      typeof tarea === 'object' && 
+      tarea.id && 
+      tarea.titulo &&
+      tarea.tipo
+    );
+    
     switch (vistaActiva) {
       case "habitos":
-        return tareas.filter((tarea) => tarea.tipo === "habito");
+        return validTareas.filter((tarea) => tarea.tipo === "habito");
       case "notas":
-        return tareas.filter((tarea) => tarea.tipo === "nota");
+        return validTareas.filter((tarea) => tarea.tipo === "nota");
       case "calendario":
         if (fechaSeleccionada) {
-          return tareas.filter((tarea) => {
+          return validTareas.filter((tarea) => {
             if (tarea.fechaVencimiento === fechaSeleccionada) return true;
             if (tarea.fechaFin === fechaSeleccionada) return true;
             if (tarea.historial?.some((h) => h.fecha === fechaSeleccionada))
@@ -456,23 +472,23 @@ function App() {
         }
         return [];
       default:
-        return tareas;
+        return validTareas;
     }
-  };
+  }, [tareas, vistaActiva, fechaSeleccionada]);
 
   // Obtener tareas semanales filtradas según el día seleccionado
-  const obtenerTareasSemanaFiltradas = () => {
+  const obtenerTareasSemanaFiltradas = useCallback(() => {
+    if (!tareasSemana || !Array.isArray(tareasSemana)) return [];
+    
     return tareasSemana
-      .filter((tarea) => tarea.dia === diaSemanaSeleccionado)
+      .filter((tarea) => tarea && tarea.dia === diaSemanaSeleccionado && tarea.horaInicio)
       .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
-  };
+  }, [tareasSemana, diaSemanaSeleccionado]);
 
   // Calcular el porcentaje de tiempo transcurrido en el año
   const obtenerProgresoAnual = () => {
     return (diaActualDelAnio / diasTotales) * 100;
   };
-
-  const tareasFiltradas = obtenerTareasFiltradas();
 
   const [tareasSemanaFiltradas, setTareasSemanaFiltradas] = useState([]);
 
@@ -484,7 +500,21 @@ function App() {
   useEffect(() => {
     const tareas = obtenerTareasSemanaFiltradas();
     setTareasSemanaFiltradas(tareas);
-  }, [volverCargarTareasFiltradas]);
+  }, [volverCargarTareasFiltradas, obtenerTareasSemanaFiltradas]);
+
+  const tareasFiltradas = obtenerTareasFiltradas();
+
+  // Show loading state during hydration (after all hooks)
+  if (!isClient || cargando) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+          <p className="text-white/60">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Modificar el return para incluir los botones de creación y los modales
   return (
@@ -745,8 +775,5 @@ function App() {
     </div>
   );
 }
-
-
-
 
 export default App;

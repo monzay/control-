@@ -25,7 +25,7 @@ function useEjecutarDadaSemana(callback) {
         } catch (error) {
             console.log(error)
         }
-    },[])
+    },[callback])
   }
 
 

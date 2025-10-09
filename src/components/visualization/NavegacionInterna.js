@@ -9,11 +9,6 @@ import {
 
 const vistas = [
   { id: "semana", label: "Mi Semana", icon: CalendarDays },
-  { id: "todas", label: "Todas las tareas", icon: Home },
-  { id: "habitos", label: "Hábitos", icon: Sparkles },
-  { id: "notas", label: "Notas", icon: PenTool },
-  { id: "chats", label: "Chats", icon: MessageCircle },
-  { id: "Objetivo", label: "Objetivo", icon: MessageCircle },
 ]
 
 function NavegacionInterna({ vistaActiva, setVistaActiva }) {

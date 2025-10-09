@@ -9,7 +9,12 @@ function obtenerDesdeLocalStorage(clave, valorPorDefecto) {
     const guardado = localStorage.getItem(clave)
     if (guardado) {
       try {
-        return JSON.parse(guardado)
+        const parsed = JSON.parse(guardado)
+        // Ensure it's an array and filter out any invalid items
+        if (Array.isArray(parsed)) {
+          return parsed.filter(item => item && typeof item === 'object')
+        }
+        return valorPorDefecto
       } catch (e) {
         console.warn(`Error al parsear ${clave}:`, e)
       }

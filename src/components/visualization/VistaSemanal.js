@@ -171,7 +171,7 @@ function VistaSemanal({
     if (diasSemana.includes(diaSemanaActual)) {
       setDiaSemanaSeleccionado(diaSemanaActual);
     }
-  }, []);
+  }, [diasSemana, setDiaSemanaSeleccionado]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">

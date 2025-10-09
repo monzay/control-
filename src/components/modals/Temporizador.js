@@ -46,7 +46,7 @@ function Temporizador({ tareaId ,setMostrarModalTemporizador}) {
     }
 
     return limpiarIntervalo;
-  }, [activo]);
+  }, [activo, segundosRestantes]);
 
   useEffect(() => {
     if (segundosRestantes <= 0 && activo) {

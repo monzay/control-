@@ -11,7 +11,7 @@ function useEjecutarUnaVezPorDia(callback) {
       localStorage.setItem("ultimaSesion", hoy );
       callback();
     }
-  }, []);
+  }, [callback]);
 }
 
 export default  useEjecutarUnaVezPorDia

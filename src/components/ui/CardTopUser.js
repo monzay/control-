@@ -1,12 +1,15 @@
 // aun no lo estamos utilizando hasta que se conectado con un servidor web 
 
 import { Medal } from 'lucide-react';
+import Image from 'next/image';
 {usuarios.slice(0, 3).map((usuario, index) => (
     <div key={usuario.id} className="flex items-center gap-3">
       <div className="relative">
-        <img
+        <Image
           src={usuario.avatar || "/placeholder.svg?height=40&width=40"}
           alt={usuario.nombre}
+          width={40}
+          height={40}
           className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
         />
         <div

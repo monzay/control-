@@ -1,7 +1,7 @@
 import { contextoStateX } from "@/Context/ProviderStateX";
 import FechaModulo from "@/function/FechaModulo";
 import useEjecutarDadaSemana from "@/hooks/useEjecucionCadaSemana";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 
 function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
   const [estadisticas, setEstadisticas] = useState();
@@ -60,7 +60,7 @@ function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
     };
   };
 
-  const cal = () => {
+  const cal = useCallback(() => {
     // Total de tareas completadas y no completadas
     const totalCompletadas = tareasSemana.filter(
       (tarea) => tarea.completada
@@ -102,11 +102,11 @@ function EstadisticasSemanales({ tareasSemana, setTareasSemana, diasSemana }) {
       tasaCompletado,
       estadisticasPorDia,
     };
-  };
+  }, [tareasSemana, diasSemana]);
 
   useEffect(() => {
     setEstadisticas(cal());
-  }, [tareasSemana, diasSemana]);
+  }, [tareasSemana, diasSemana, cal]);
 
   const reiniciarTareasSemanales = () => {
     const tareaSemanaReiniciadas = tareasSemana.map((t) =>

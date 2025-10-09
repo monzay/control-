@@ -7,6 +7,11 @@ export default function TaskCard({
   onToggleComplete,
   className = "",
 }) {
+  // Safety check to prevent rendering if tarea is invalid
+  if (!tarea || typeof tarea !== 'object') {
+    return null;
+  }
+
   return (
     <div
       className={`backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg flex flex-col ${
@@ -16,7 +21,7 @@ export default function TaskCard({
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
-            {IconoModulo.obtenerIconoTarea(tarea.tipo)}
+            {tarea.tipo && IconoModulo.obtenerIconoTarea(tarea.tipo)}
             <span
               className={`text-xs px-2 py-0.5 rounded-full ${IconoModulo.obtenerClaseColorPrioridad(tarea.prioridad)}`}
             >

@@ -84,7 +84,7 @@ function VisualizacionDias({
   }
 
   // validad si es  de  tipo nota  y habito  y  si tambien se paso por enciama de una nota par mostrar la cantidad de dias antes de la fecha que el usuario  
-  if(fechaImportante.tipo  && false  ){
+  if(fechaImportante && fechaImportante.tipo  && false  ){
     return   "bg-red-500"
       
   }

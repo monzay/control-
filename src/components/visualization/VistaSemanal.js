@@ -160,18 +160,40 @@ function VistaSemanal({
   };
 
   // Añadir este useEffect al principio del componente VistaSemanal
+  // Solo se ejecuta una vez al montar el componente para establecer el día actual inicial
+  // No se ejecuta cuando el usuario selecciona manualmente un día
   useEffect(() => {
-    // Obtener el día actual de la semana
-    const hoy = new Date();
-    const diaSemanaActual = hoy
-      .toLocaleDateString("es-ES", { weekday: "long" })
-      .toLowerCase();
+    // Solo establecer el día actual si no hay un día ya seleccionado
+    // o si el día seleccionado no está en la lista de días de la semana
+    if (!diaSemanaSeleccionado || !diasSemana.includes(diaSemanaSeleccionado)) {
+      // Obtener el día actual de la semana
+      const hoy = new Date();
+      const diaSemanaActual = hoy
+        .toLocaleDateString("es-ES", { weekday: "long" })
+        .toLowerCase();
 
-    // Verificar si el día actual está en la lista de días de la semana
-    if (diasSemana.includes(diaSemanaActual)) {
-      setDiaSemanaSeleccionado(diaSemanaActual);
+      // Verificar si el día actual está en la lista de días de la semana
+      if (diasSemana.includes(diaSemanaActual)) {
+        setDiaSemanaSeleccionado(diaSemanaActual);
+      }
     }
-  }, [diasSemana, setDiaSemanaSeleccionado]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo ejecutar una vez al montar
+
+  // Actualizar el día en nuevaTareaSemanal cuando cambie el día seleccionado
+  // Esto asegura que cuando el usuario selecciona un día y crea una tarea, 
+  // la tarea se crea para el día seleccionado, no para el día de hoy
+  useEffect(() => {
+    if (diaSemanaSeleccionado) {
+      // Si no se está agregando una tarea, actualizar el día inmediatamente
+      // Si se está agregando una tarea, actualizar el día para que la nueva tarea
+      // se cree para el día seleccionado
+      setNuevaTareaSemanal(prev => ({
+        ...prev,
+        dia: diaSemanaSeleccionado
+      }));
+    }
+  }, [diaSemanaSeleccionado]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import FechaModulo from "@/function/FechaModulo.js";
 import { ContextoDias } from "@/Context/ProviderDias";
+import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas";
 import funcionesGlobales from "@/function/funcionesGlobales";
 import { data } from "autoprefixer";
 /**
@@ -20,6 +21,7 @@ function VisualizacionDias({
   const anioActual = new Date().getFullYear();
   const [diaHover, setDiaHover] = useState(null);
   const { todosLosDias } = useContext(ContextoDias); // return (objeto)
+  const { setVolverCargarTareasFiltradas } = useContext(ContextVolverACargarTareasFiltradas);
   const [diaDeLaNot,setDiaDeLaNota] = useState(0)
   
 
@@ -221,6 +223,8 @@ function VisualizacionDias({
                     if (diasSemana.includes(diaSemana)) {
                       setDiaSemanaSeleccionado(diaSemana);
                       setVistaActiva("semana");
+                      // Actualizar las tareas filtradas para mostrar las tareas del día seleccionado
+                      setVolverCargarTareasFiltradas(prev => !prev);
                     }
                   }}
                 >

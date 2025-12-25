@@ -9,13 +9,22 @@ import {
 
 const vistas = [
   { id: "semana", label: "Mi Semana", icon: CalendarDays },
+  { id: "habitos", label: "Hábitos", icon: Sparkles },
+  { id: "notas", label: "Notas", icon: PenTool },
 ]
 
-function NavegacionInterna({ vistaActiva, setVistaActiva }) {
+function NavegacionInterna({ vistaActiva, setVistaActiva, filtroActivo, setFiltroActivo }) {
   // Función para definir las clases dinámicamente
   const getClaseBoton = (vista) =>
     `w-full flex items-center gap-2 p-2 rounded-lg text-sm ${
       vistaActiva === vista
+        ? "bg-emerald-600 text-white"
+        : "text-white/60 hover:text-white hover:bg-white/5"
+    }`
+
+  const getClaseFiltro = (filtro) =>
+    `w-full flex items-center gap-2 p-2 rounded-lg text-sm ${
+      filtroActivo === filtro
         ? "bg-emerald-600 text-white"
         : "text-white/60 hover:text-white hover:bg-white/5"
     }`
@@ -30,7 +39,13 @@ function NavegacionInterna({ vistaActiva, setVistaActiva }) {
           {vistas.map(({ id, label, icon: Icon }) => (
             <li key={id}>
               <button
-                onClick={() => setVistaActiva(id)}
+                onClick={() => {
+                  setVistaActiva(id);
+                  // Si cambia de vista, resetear el filtro
+                  if (id !== "semana") {
+                    setFiltroActivo(null);
+                  }
+                }}
                 className={getClaseBoton(id)}
               >
                 <Icon className="h-4 w-4 text-emerald-400" />
@@ -40,6 +55,8 @@ function NavegacionInterna({ vistaActiva, setVistaActiva }) {
           ))}
         </ul>
       </div>
+
+
 
       <div className="mt-auto pt-4 border-t border-white/5">
         <button className="w-full flex items-center gap-2 p-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5">

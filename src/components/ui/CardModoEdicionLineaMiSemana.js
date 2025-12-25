@@ -17,6 +17,7 @@ function CardModoEdicionLineaMiSemana ({
   tarea,
   guardarTareaEditadaEnLinea
 }){
+
     return (
         <>
         <td className="py-3 px-3">

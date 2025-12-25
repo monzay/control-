@@ -4,6 +4,8 @@ import { ContextoDias } from "@/Context/ProviderDias";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas";
 import funcionesGlobales from "@/function/funcionesGlobales";
 import { data } from "autoprefixer";
+
+
 /**
  * Componente de Visualización de Días - Muestra calendario estilo GitHub
  */
@@ -17,17 +19,28 @@ function VisualizacionDias({
   setDiaSemanaSeleccionado,
   setVistaActiva,
 }) {
+
+
   // Configuración para que se vea como la imagen de referencia
   const anioActual = new Date().getFullYear();
+  const anioSiguiente = anioActual + 1;
   const [diaHover, setDiaHover] = useState(null);
+  const [anioHover, setAnioHover] = useState(null); // Para saber en qué año está el hover
+  const [mostrarAnioSiguiente, setMostrarAnioSiguiente] = useState(false); // Estado para mostrar/ocultar año siguiente
   const { todosLosDias } = useContext(ContextoDias); // return (objeto)
   const { setVolverCargarTareasFiltradas } = useContext(ContextVolverACargarTareasFiltradas);
   const [diaDeLaNot,setDiaDeLaNota] = useState(0)
   
+  // Función auxiliar para obtener fecha de un día de un año específico
+  const obtenerFechaDiaPorAnio = (indiceDia, anio) => {
+    const inicio = new Date(anio, 0, 0);
+    inicio.setDate(inicio.getDate() + indiceDia);
+    return inicio.toISOString().split("T")[0];
+  };
 
   // Calcular porcentaje de tareas completadas por día
-  const calcularPorcentajeCompletadoPorDia = (dia) => {
-    const fechaDia = FechaModulo.obtenerFechaDia(dia);
+  const calcularPorcentajeCompletadoPorDia = (dia, anio = anioActual) => {
+    const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
 
     // Obtener tareas de "Mi Semana" para este día
     const diaSemana = new Date(fechaDia)
@@ -65,15 +78,15 @@ function VisualizacionDias({
   };
 
   // Obtener información de fechas importantes para un día
-  const obtenerInfoFechaImportante = (dia) => {
-    const fechaDia = FechaModulo.obtenerFechaDia(dia);
+  const obtenerInfoFechaImportante = (dia, anio = anioActual) => {
+    const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
     return fechasImportantes.find((fecha) => fecha.fecha === fechaDia);
   };
 
   // Obtener color basado en nivel de actividad con tonos de verde
- const obtenerColorActividad = (dia) => {
-  const fechaImportante = obtenerInfoFechaImportante(dia);
-  const fechaDia = FechaModulo.obtenerFechaDia(dia);
+ const obtenerColorActividad = (dia, anio = anioActual) => {
+  const fechaImportante = obtenerInfoFechaImportante(dia, anio);
+  const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
 
   // 1. Verificar si es una fecha importante
   if (fechaImportante) {
@@ -91,8 +104,11 @@ function VisualizacionDias({
       
   }
 
-  // 2. Si el día es futuro
-  if (dia > diaActualDelAnio) return "bg-gray-800";
+  // 2. Si el día es futuro (solo para el año actual)
+  if (anio === anioActual && dia > diaActualDelAnio) return "bg-gray-800";
+  
+  // Para el año siguiente, todos los días son futuros
+  if (anio === anioSiguiente) return "bg-gray-800";
 
   // 3. Obtener el porcentaje de completado
   let porcentajeCompletado = 0;
@@ -130,11 +146,11 @@ function VisualizacionDias({
     if (datoExistente) {
       porcentajeCompletado = datoExistente.porcentaje;
     } else {
-      porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia);
+      porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio);
       guardarDatoEnStorage({ fecha: fechaDia, porcentaje: porcentajeCompletado, dia, mensaje: null });
     }
   } else {
-    porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia); // SSR fallback
+    porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio); // SSR fallback
   }
 
   // 4. Devolver el color según el porcentaje
@@ -146,13 +162,13 @@ function VisualizacionDias({
 
 
   // Obtener título para el tooltip
-  const obtenerTituloTooltip = (dia) => {
-    const fechaImportante = obtenerInfoFechaImportante(dia);
+  const obtenerTituloTooltip = (dia, anio = anioActual) => {
+    const fechaImportante = obtenerInfoFechaImportante(dia, anio);
     if (fechaImportante) {
       return fechaImportante.titulo;
     }
 
-    function mostrarMensajeTooltip(dayOfYear, year = 2025) {
+    function mostrarMensajeTooltip(dayOfYear, year) {
       const date = new Date(year, 0); // enero es el mes 0
       date.setDate(dayOfYear);
 
@@ -161,20 +177,21 @@ function VisualizacionDias({
       const dd = String(date.getDate()).padStart(2, "0");
 
       const fecha = `${yyyy}-${mm}-${dd}`;
-      const datosAlmacenados = JSON.parse(
-        localStorage.getItem("datos-dias-porcentajes")
-      );
-      const dataActividad = datosAlmacenados.find(
-        (prev) => prev.fecha === fecha
-      );
-      if (dataActividad.mensaje !== null) {
-        console.log("mensaje");
-        return `${dataActividad.mensaje}`;
-      } else {
-        return `Día ${dia}`;
+      const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
+      if (!datosAlmacenados) return `Día ${dia} - ${year}`;
+      
+      try {
+        const datos = JSON.parse(datosAlmacenados);
+        const dataActividad = datos.find((prev) => prev.fecha === fecha);
+        if (dataActividad && dataActividad.mensaje !== null) {
+          return `${dataActividad.mensaje}`;
+        }
+      } catch {
+        // Si hay error al parsear, continuar
       }
+      return `Día ${dia} - ${year}`;
     }
-    return `Día ${dia}`;
+    return mostrarMensajeTooltip(dia, anio);
   };
 
 
@@ -186,61 +203,95 @@ function VisualizacionDias({
   }
   
 
+  // Función para renderizar una cuadrícula de año
+  const renderizarCuadriculaAnio = (anio, esAnioActual) => {
+    return (
+      <div className="flex-1">
+        <div className="text-xs text-white/50 mb-2 text-center">
+          Año {anio}
+        </div>
+        <div className="grid grid-rows-7 grid-flow-col gap-1">
+          {Array.from({ length: 365 }).map((_, index) => {
+            const dia = index + 1;
+            const esDiaActual = esAnioActual && dia === diaActualDelAnio;
+            return (
+              <div
+                key={`${anio}-${index}`}
+                style={{ borderRadius: "1px" }}
+                className={`w-3 h-3 ${obtenerColorActividad(dia, anio)} relative cursor-pointer`}
+                onMouseEnter={() => {
+                  setDiaDeLaNota(dia);
+                  setDiaHover(dia);
+                  setAnioHover(anio);
+                }}
+                onMouseLeave={() => {
+                  setDiaHover(null);
+                  setAnioHover(null);
+                }}
+                onClick={() => {
+                  // Al hacer clic en un día, seleccionar ese día en la semana si corresponde
+                  const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
+                  const diaSemana = new Date(fechaDia)
+                    .toLocaleDateString("es-ES", { weekday: "long" })
+                    .toLowerCase();
+                  if (diasSemana.includes(diaSemana)) {
+                    setDiaSemanaSeleccionado(diaSemana);
+                    setVistaActiva("semana");
+                    setVolverCargarTareasFiltradas(prev => !prev);
+                  }
+                }}
+              >
+                {diaHover === dia && anioHover === anio && (
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-xs text-white rounded whitespace-nowrap z-50">
+                    {obtenerTituloTooltip(dia, anio)}
+                  </div>
+                )}
+                {esDiaActual && (
+                  <div className="absolute inset-0 border-2 border-white rounded-sm animate-pulse"></div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg mb-6 overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="text-base font-medium text-white/80">Actividad</h3>
           <div className="text-xs text-white/50 mt-1">
-            Día {diaActualDelAnio}/{diasTotales} del año {anioActual}
+            {mostrarAnioSiguiente ? (
+              <>Año {anioSiguiente}</>
+            ) : (
+              <>Día {diaActualDelAnio}/{diasTotales} del año {anioActual}</>
+            )}
           </div>
         </div>
+        <button
+          onClick={() => setMostrarAnioSiguiente(!mostrarAnioSiguiente)}
+          className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
+        >
+          {mostrarAnioSiguiente ? (
+            <>
+              <span>Ver {anioActual}</span>
+            </>
+          ) : (
+            <>
+              <span>Ver {anioSiguiente}</span>
+            </>
+          )}
+        </button>
       </div>
 
-      <div className="flex min-w-[700px]">
-        {/* Cuadrícula principal */}
-        <div className="flex-1">
-          {/* Cuadrícula de actividad */}
-          <div className="grid grid-rows-7 grid-flow-col gap-1">
-            {Array.from({ length: 365 }).map((_, index) => {
-              const dia = index + 1;
-              return (
-                <div
-                  key={index}
-                  style={{ borderRadius: "1px" }}
-                  className={`w-3 h-3  ${obtenerColorActividad( dia )} relative cursor-pointer  `  }
-                  onMouseEnter={() =>{
-                    setDiaDeLaNota(dia)
-                    setDiaHover(dia)
-                  }}
-                  onMouseLeave={() => setDiaHover(null)}
-                  onClick={() => {
-                    // Al hacer clic en un día, seleccionar ese día en la semana si corresponde
-                    const fechaDia = FechaModulo.obtenerFechaDia(dia);
-                    const diaSemana = new Date(fechaDia)
-                      .toLocaleDateString("es-ES", { weekday: "long" })
-                      .toLowerCase();
-                    if (diasSemana.includes(diaSemana)) {
-                      setDiaSemanaSeleccionado(diaSemana);
-                      setVistaActiva("semana");
-                      // Actualizar las tareas filtradas para mostrar las tareas del día seleccionado
-                      setVolverCargarTareasFiltradas(prev => !prev);
-                    }
-                  }}
-                >
-                  {diaHover === dia && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-xs text-white rounded whitespace-nowrap z-50">
-                      {obtenerTituloTooltip(dia)}
-                    </div>
-                  )}
-                  {dia === diaActualDelAnio && (
-                    <div className="absolute inset-0 border-2 border-white rounded-sm animate-pulse"></div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <div className="flex flex-col lg:flex-row gap-4 min-w-[700px]">
+        {/* Cuadrícula del año actual - solo se muestra si NO se está mostrando el año siguiente */}
+        {!mostrarAnioSiguiente && renderizarCuadriculaAnio(anioActual, true)}
+        
+        {/* Cuadrícula del año siguiente - solo se muestra si mostrarAnioSiguiente es true */}
+        {mostrarAnioSiguiente && renderizarCuadriculaAnio(anioSiguiente, false)}
       </div>
 
       <div className="flex justify-between items-center mt-2 text-xs text-white/50">

@@ -16,6 +16,7 @@ function CardDiaSemana({ setDiaSemanaSeleccionado, diaSemanaSeleccionado, diasSe
   
   return (
     <div className="flex flex-wrap gap-1">
+
       {diasSemana.map((dia) => {
         // Verificar si es el día actual
         const esHoy =

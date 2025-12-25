@@ -121,6 +121,7 @@ function App() {
   const [diaActualDelAnio, setDiaActualDelAnio] = useState(0);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [vistaActiva, setVistaActiva] = useState("semana"); // Cambiado a "semana" como vista principal
+  const [filtroActivo, setFiltroActivo] = useState(null); // null, "habitos", o "notas"
   const [mostrarTareas, setMostrarTareas] = useState(true);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [diaSemanaSeleccionado, setDiaSemanaSeleccionado] = useState(
@@ -158,38 +159,46 @@ function App() {
     setDiaActualDelAnio(funcionesGlobales.ObtenerDiaNumeroDelAño());
   }, []);
 
-  // Verificar si es un nuevo lunes para reiniciar las tareas semanales
+  // Verificar si es una nueva semana para reiniciar las tareas semanales
   useEffect(() => {
     const verificarNuevaSemana = () => {
       const semanaActual = FechaModulo.obtenerNumeroSemana();
+      
+      // Obtener la última semana registrada desde localStorage
+      const ultimaSemanaRegistrada = localStorage.getItem("ultima-semana-reinicio");
+      const ultimaSemana = ultimaSemanaRegistrada ? parseInt(ultimaSemanaRegistrada, 10) : null;
 
-      // Si es un nuevo lunes, reiniciar las tareas completadas
-      if (FechaModulo.esNuevaSemana()) {
+      // Si cambió la semana o es la primera vez, reiniciar todas las tareas
+      if (ultimaSemana === null || ultimaSemana !== semanaActual) {
+        // Reiniciar todas las tareas semanales
         setTareasSemana((prev) =>
-          prev.map((tarea) => {
-            if (tarea.ultimaSemanReinicio !== semanaActual) {
-              return {
-                ...tarea,
-                completada: false,
-                ultimaSemanReinicio: semanaActual,
-              };
-            }
-            return tarea;
-          })
+          prev.map((tarea) => ({
+            ...tarea,
+            completada: false,
+            ultimaSemanReinicio: semanaActual,
+            // También reiniciar contadores si existen
+            contadorCompletadas: 0,
+            contadorNoCompletadas: 0,
+          }))
         );
 
+        // Guardar la semana actual en localStorage
+        localStorage.setItem("ultima-semana-reinicio", semanaActual.toString());
+        setNumeroSemanaActual(semanaActual);
+      } else {
+        // Si no cambió la semana, solo actualizar el número de semana actual
         setNumeroSemanaActual(semanaActual);
       }
     };
 
-    // Verificar al cargar y configurar un intervalo diario
+    // Verificar al cargar y configurar un intervalo cada hora para detectar cambios de semana
     verificarNuevaSemana();
-    const verificacionDiaria = setInterval(
+    const verificacionPeriodica = setInterval(
       verificarNuevaSemana,
-      1000 * 60 * 60 * 24
-    ); // Verificar cada 24 horas
+      1000 * 60 * 60 // Verificar cada hora
+    );
 
-    return () => clearInterval(verificacionDiaria);
+    return () => clearInterval(verificacionPeriodica);
   }, [setTareasSemana]);
 
   // Sincronizar fechas de finalización con fechas importantes
@@ -417,6 +426,7 @@ function App() {
             return tarea;
           }
 
+
           // La estamos completando por primera vez hoy
           const historialActualizado = [
             { fecha: hoy, completada: true },
@@ -476,14 +486,27 @@ function App() {
     }
   }, [tareas, vistaActiva, fechaSeleccionada]);
 
-  // Obtener tareas semanales filtradas según el día seleccionado
+  // Obtener tareas semanales filtradas
+  // Cuando se está en "Mi Semana" sin filtro activo, mostrar todas las tareas de la semana
+  // Si hay un día seleccionado específicamente, se puede filtrar por ese día (pero por defecto mostrar todas)
   const obtenerTareasSemanaFiltradas = useCallback(() => {
     if (!tareasSemana || !Array.isArray(tareasSemana)) return [];
     
+    // Mostrar todas las tareas de la semana ordenadas por día y hora
+    const ordenDias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+    
     return tareasSemana
-      .filter((tarea) => tarea && tarea.dia === diaSemanaSeleccionado && tarea.horaInicio)
-      .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
-  }, [tareasSemana, diaSemanaSeleccionado]);
+      .filter((tarea) => tarea && tarea.horaInicio)
+      .sort((a, b) => {
+        // Ordenar primero por día, luego por hora
+        const indiceA = ordenDias.indexOf(a.dia);
+        const indiceB = ordenDias.indexOf(b.dia);
+        if (indiceA !== indiceB) {
+          return indiceA - indiceB;
+        }
+        return a.horaInicio.localeCompare(b.horaInicio);
+      });
+  }, [tareasSemana]);
 
   // Calcular el porcentaje de tiempo transcurrido en el año
   const obtenerProgresoAnual = () => {
@@ -551,6 +574,7 @@ function App() {
               setMostrarRegistro={setMostrarRegistro}
             />
 
+
             <div className="flex flex-1 relative">
               {/* Menú lateral */}
               <MenuLateral
@@ -558,6 +582,8 @@ function App() {
                 vistaActiva={vistaActiva}
                 setVistaActiva={setVistaActiva}
                 setMenuAbierto={setMenuAbierto}
+                filtroActivo={filtroActivo}
+                setFiltroActivo={setFiltroActivo}
               />
 
               {/* Contenido principal */}
@@ -587,6 +613,11 @@ function App() {
                           horaActual={horaActual}
                           fechasImportantes={fechasImportantes}
                           setVistaActiva={setVistaActiva}
+                          filtroActivo={filtroActivo}
+                          tareas={tareas}
+                          eliminarTarea={eliminarTarea}
+                          iniciarEditarTarea={iniciarEditarTarea}
+                          alternarTarea={alternarTarea}
                         />
                       ) : vistaActiva === "Objetivo" ? (
                         <Chat/>

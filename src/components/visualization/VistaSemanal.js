@@ -1,15 +1,12 @@
 import { useState, useEffect, useContext } from "react";
 import VisualizacionDias from "./VisualizacionDias.js";
-import { Play, Edit, Trash2, Check } from "lucide-react";
+import { Play, Edit, Trash2, Check, Sparkles, PenTool } from "lucide-react";
 
 import { CalendarDays } from "lucide-react";
 import TopUsuarios from "./TopUsuarios.js";
 import EstadisticasSemanales from "./EstadisticasSemanales.js";
 import CardDiaSemana from "../ui/CardDiaSemana.js";
 import Cronometro from "../ui/Cronometro.js";
-
-import AnimacionModulo from "@/function/Confeti.js";
-import FechaModulo from "@/function/FechaModulo.js";
 import CardModoEdicionLineaMiSemana from "../ui/CardModoEdicionLineaMiSemana.js";
 import CardModoVisualizacionMiSemana from "../ui/CardModoVisualizacionMiSemana.js";
 import CardFilaAgregarNuevaTareaMiSemana from "../ui/CardFilaAgragarNuevaTareaMiSemana.js";
@@ -19,8 +16,11 @@ import BtnAgregarMiSemana from "../ui/BtnAgragarMiSemana.js";
 import CardModoEdicionMovilMiSemana from "../ui/CardModoEdicionMovilMiSemana.js";
 import CardModoVisualizacionMovilMiSemana from "../ui/CardModoVisualizacionMovilMiSemana.js";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas.js";
-import funcionesGlobales from "@/function/funcionesGlobales.js";
 import { formatearYValidarHora } from "@/function/FormatearYValidarHora.js";
+import ModalClonarTareas from "../modals/ModalClonarTareas.js";
+import TaskCard from "../ui/TaskCard.js";
+
+
 
 function VistaSemanal({
   diasSemana,
@@ -42,8 +42,14 @@ function VistaSemanal({
   fechasImportantes,
   setVistaActiva,
   setTareaId,
+  filtroActivo,
+  tareas = [],
+  eliminarTarea,
+  iniciarEditarTarea,
+  alternarTarea,
 }) {
   const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
+  const [mostrarModalClonar, setMostrarModalClonar] = useState(false);
   const [nuevaTareaSemanal, setNuevaTareaSemanal] = useState({
     titulo: "",
     dia: diaSemanaSeleccionado,
@@ -139,6 +145,41 @@ function VistaSemanal({
       duracion: "01:00",
     });
   };
+
+  // Función para clonar todas las tareas de un día a otro
+  const clonarTareasDia = (diaDestino) => {
+    if (!diaSemanaSeleccionado || !diaDestino) return;
+
+    // Obtener todas las tareas del día origen
+    const tareasDelDiaOrigen = tareasSemana.filter(
+      (tarea) => tarea.dia === diaSemanaSeleccionado
+    );
+
+    if (tareasDelDiaOrigen.length === 0) {
+      // No hay tareas para clonar
+      return;
+    }
+
+    // Clonar las tareas con nuevos IDs y cambiar el día
+    const tareasClonadas = tareasDelDiaOrigen.map((tarea) => ({
+      ...tarea,
+      id: `w${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      dia: diaDestino,
+      completada: false, // Las tareas clonadas siempre empiezan como no completadas
+    }));
+
+    // Añadir las tareas clonadas a las tareas existentes y ordenar
+    const tareasActualizadas = [...tareasSemana, ...tareasClonadas].sort((a, b) => {
+      if (a.dia !== b.dia) return 0; // Solo ordenar dentro del mismo día
+      return a.horaInicio.localeCompare(b.horaInicio);
+    });
+
+    setTareasSemana(tareasActualizadas);
+    setVolverCargarTareasFiltradas((prev) => !prev);
+    
+    // Cambiar al día destino después de clonar
+    setDiaSemanaSeleccionado(diaDestino);
+  };
   // Función para guardar tarea editada en línea
 
   const guardarTareaEditadaEnLinea = () => {
@@ -195,6 +236,34 @@ function VistaSemanal({
     }
   }, [diaSemanaSeleccionado]);
 
+  // Filtrar tareas según el filtro activo
+  // Convertir "habitos" -> "habito" y "notas" -> "nota"
+  const tipoFiltro = filtroActivo === "habitos" ? "habito" : filtroActivo === "notas" ? "nota" : null;
+  const tareasFiltradas = tipoFiltro && Array.isArray(tareas)
+    ? tareas.filter(tarea => {
+        // Validar que la tarea tenga las propiedades necesarias
+        return tarea && 
+               typeof tarea === 'object' && 
+               tarea.tipo === tipoFiltro &&
+               tarea.id &&
+               tarea.titulo;
+      })
+    : [];
+
+// estado  que filtra  las tareas por dia de la semanan en  base a los eventos click
+    const [tareasFiltradasDia, setTareasFiltradasDia] = useState([]);
+    
+  useEffect(()=>{
+    const  tareasFiltradasDia = tareasSemanaFiltradas.filter(tarea => tarea.dia === diaSemanaSeleccionado)
+    setTareasFiltradasDia(tareasFiltradasDia)
+  },[diaSemanaSeleccionado,tareasSemanaFiltradas]);
+
+
+
+ useEffect(()=>{
+  console.log(filtroActivo)
+ },[filtroActivo]);
+
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Contenido principal */}
@@ -211,6 +280,44 @@ function VistaSemanal({
           setVistaActiva={setVistaActiva}
         />
 
+        {/* Mostrar notas o hábitos si hay filtro activo - fuera de Mi Semana */}
+        {filtroActivo && (
+          <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
+              <h2 className="text-lg font-medium flex items-center gap-2 text-white/90">
+                {filtroActivo === "habitos" ? (
+                  <Sparkles className="h-5 w-5 text-emerald-400" />
+                ) : (
+                  <PenTool className="h-5 w-5 text-emerald-400" />
+                )}
+                {filtroActivo === "habitos" ? "Hábitos" : "Notas"}
+                <span className="text-xs text-white/50 ml-2">
+                  ({tareasFiltradas.length})
+                </span>
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tareasFiltradas.length > 0 ? (
+                tareasFiltradas.map((tarea) => (
+                  <TaskCard
+                    key={tarea.id}
+                    tarea={tarea}
+                    onEdit={iniciarEditarTarea}
+                    onDelete={eliminarTarea}
+                    onToggleComplete={alternarTarea}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-8 text-center text-white/40 text-sm">
+                  No hay {filtroActivo === "habitos" ? "hábitos" : "notas"} disponibles.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Sección Mi Semana - solo se muestra si no hay filtro activo */}
+        {!filtroActivo && (
         <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
             <h2 className="text-lg font-medium flex items-center gap-2 text-white/90">
@@ -244,7 +351,6 @@ function VistaSemanal({
               />
             </div>
           )}
-
           <div className="flex flex-col gap-6">
             {/* Tabla de tareas semanales adaptada para móviles */}
             <div className="overflow-x-auto">
@@ -253,6 +359,7 @@ function VistaSemanal({
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-white/5">
+                      
                       <th className="py-2 px-3 text-left text-xs font-medium text-white/50">
                         Tarea
                       </th>
@@ -277,8 +384,8 @@ function VistaSemanal({
                     </tr>
                   </thead>
                   <tbody>
-                    {tareasSemanaFiltradas.length > 0 ? (
-                      tareasSemanaFiltradas.map((tarea) => (
+                    {tareasFiltradasDia.length > 0 ? (
+                      tareasFiltradasDia.map((tarea) => (
                         <tr
                           key={tarea.id}
                           className="border-b border-white/5 hover:bg-white/5"
@@ -313,10 +420,10 @@ function VistaSemanal({
                     ) : (
                       <tr>
                         <td
-                          colSpan={7}
+                          colSpan={8}
                           className="py-8 text-center text-white/40 text-sm"
                         >
-                          No hay tareas planificadas para este día.
+                          No hay tareas planificadas para esta semana.
                         </td>
                       </tr>
                     )}
@@ -443,17 +550,23 @@ function VistaSemanal({
             </div>
           </div>
         </div>
+        )}
 
-        {/* Información de horas totales y restantes (diseño moderno) */}
-        <CardInfoDeHorasTotalesYRestante
-          calcularHorasTotales={calcularHorasTotales}
-          calcularHorasRestantes={calcularHorasRestantes}
-        />
-        {/* Botón para planificar nueva tarea (al final a la derecha) */}
-        <BtnAgregarMiSemana
-          setAgregandoTareaSemanal={setAgregandoTareaSemanal}
-          agregandoTareaSemanal={agregandoTareaSemanal}
-        />
+        {/* Información de horas totales y restantes (diseño moderno) - solo se muestra si no hay filtro */}
+        {!filtroActivo && (
+          <>
+            <CardInfoDeHorasTotalesYRestante
+              calcularHorasTotales={calcularHorasTotales}
+              calcularHorasRestantes={calcularHorasRestantes}
+            />
+            {/* Botón para planificar nueva tarea (al final a la derecha) */}
+            <BtnAgregarMiSemana
+              setAgregandoTareaSemanal={setAgregandoTareaSemanal}
+              agregandoTareaSemanal={agregandoTareaSemanal}
+              onClonarClick={() => setMostrarModalClonar(true)}
+            />
+          </>
+        )}
       </div>
 
       {/* Panel lateral con reloj y top usuarios */}
@@ -478,6 +591,16 @@ function VistaSemanal({
           />
         </div>
       </div>
+
+      {/* Modal para clonar tareas */}
+      {mostrarModalClonar && (
+        <ModalClonarTareas
+          onClose={() => setMostrarModalClonar(false)}
+          onConfirm={clonarTareasDia}
+          diaOrigen={diaSemanaSeleccionado}
+          diasSemana={diasSemana}
+        />
+      )}
     </div>
   );
 }

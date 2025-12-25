@@ -37,6 +37,12 @@ function CardModoVisualizacionMiSemana({
 
 
 
+  // Capitalizar primera letra del día
+  const capitalizarDia = (dia) => {
+    if (!dia) return "";
+    return dia.charAt(0).toUpperCase() + dia.slice(1);
+  };
+
   return (
     <>
       <td className="py-3 px-3 text-sm">{tarea.titulo}</td>

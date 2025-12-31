@@ -15,7 +15,7 @@ function CardModoVisualizacionMiSemana({
   setTareaId,
   
 }) {
-  const {setTareasSemana,tareasSemana} = useContext(contextoStateX)
+  const {setTareasSemana,tareasSemana, tareas} = useContext(contextoStateX)
   const {setVolverCargarTareasFiltradas} = useContext(ContextVolverACargarTareasFiltradas)
   const [diaActual, setDiaActual] = useState(funcionesGlobales.obtenerNombreDelDia);
  
@@ -28,7 +28,7 @@ function CardModoVisualizacionMiSemana({
     if(diaActual ===  tarea.dia){
       if (!tarea.completada) {
         AnimacionModulo.lanzarConfeti();
-        alternarTareaSemanal(tarea.id,setTareasSemana)
+        alternarTareaSemanal(tarea.id,setTareasSemana, tareas || [])
         setVolverCargarTareasFiltradas(prev =>  !prev)
       }
     }else  alert(" ya paso el dia ")

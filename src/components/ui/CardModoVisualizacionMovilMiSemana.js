@@ -16,14 +16,14 @@ function CardModoVisualizacionMovilMiSemana ({
 
   const [diaActual, setDiaActual] = useState(funcionesGlobales.obtenerNombreDelDia());
   const {setVolverCargarTareasFiltradas} = useContext(ContextVolverACargarTareasFiltradas)
-  const {setTareasSemana,tareasSemana} = useContext(contextoStateX)
+  const {setTareasSemana,tareasSemana, tareas} = useContext(contextoStateX)
 
 
   function ejecutarFuncionBtnTareaCompletada(){
     if(diaActual ===  tarea.dia){
       if (!tarea.completada) {
         AnimacionModulo.lanzarConfeti();
-        alternarTareaSemanal(tarea.id,setTareasSemana)
+        alternarTareaSemanal(tarea.id,setTareasSemana, tareas || [])
         setVolverCargarTareasFiltradas(prev =>  !prev)
       }
     }else  alert(" ya paso el dia ")

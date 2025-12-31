@@ -147,6 +147,11 @@ function VistaSemanal({
   };
 
   // Función para clonar todas las tareas de un día a otro
+  // ALGORITMO DE CLONACIÓN:
+  // 1. Filtra todas las tareas del día origen
+  // 2. Para cada tarea, crea una copia con nuevos valores para campos específicos
+  // 3. Asigna un nuevo ID único, cambia el día al destino y resetea campos de estado
+  // 4. Los contadores se inicializan en 0 y completada en false
   const clonarTareasDia = (diaDestino) => {
     if (!diaSemanaSeleccionado || !diaDestino) return;
 
@@ -161,12 +166,29 @@ function VistaSemanal({
     }
 
     // Clonar las tareas con nuevos IDs y cambiar el día
-    const tareasClonadas = tareasDelDiaOrigen.map((tarea) => ({
-      ...tarea,
-      id: `w${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      dia: diaDestino,
-      completada: false, // Las tareas clonadas siempre empiezan como no completadas
-    }));
+    // IMPORTANTE: Inicializar contadores en 0 y completada en false
+    const tareasClonadas = tareasDelDiaOrigen.map((tarea) => {
+      // Destructuring para separar los campos que NO queremos clonar con sus valores originales
+      const {
+        id,                    // No clonar el ID (generamos uno nuevo)
+        dia,                   // No clonar el día (lo cambiamos)
+        completada,            // No clonar completada (siempre false)
+        contadorCompletadas,   // No clonar el valor (inicializar en 0)
+        contadorNoCompletadas, // No clonar el valor (inicializar en 0)
+        ultimaSemanReinicio,   // No clonar (se inicializará si es necesario)
+        ...restoTarea          // Copiar todos los demás campos (titulo, horaInicio, duracion, etc.)
+      } = tarea;
+
+      // Crear la tarea clonada con contadores inicializados en 0
+      return {
+        ...restoTarea,         // Todos los campos excepto los excluidos (titulo, horaInicio, duracion, etc.)
+        id: `w${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Nuevo ID único
+        dia: diaDestino,       // Nuevo día
+        completada: false,     // Las tareas clonadas siempre empiezan como no completadas
+        contadorCompletadas: 0,    // Inicializar contador en 0
+        contadorNoCompletadas: 0,  // Inicializar contador en 0
+      };
+    });
 
     // Añadir las tareas clonadas a las tareas existentes y ordenar
     const tareasActualizadas = [...tareasSemana, ...tareasClonadas].sort((a, b) => {

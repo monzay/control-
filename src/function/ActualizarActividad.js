@@ -1,5 +1,6 @@
+import RachaModulo from "./RachaModulo.js";
 
-const alternarTareaSemanal = (id,setTareasSemana) => {
+const alternarTareaSemanal = (id, setTareasSemana, tareas = []) => {
   setTareasSemana(prev => {
     const nuevasTareas = prev.map((tarea) => {
       if (tarea.id === id) {
@@ -7,7 +8,7 @@ const alternarTareaSemanal = (id,setTareasSemana) => {
           const tareaActualizada = {
             ...tarea,
             completada: true,
-            contadorCompletadas: tarea.contadorCompletadas + 1,
+            contadorCompletadas: (tarea.contadorCompletadas || 0) + 1,
           };
   
           if (typeof window !== "undefined") {
@@ -37,6 +38,14 @@ const alternarTareaSemanal = (id,setTareasSemana) => {
             }
   
             localStorage.setItem("datos-dias-porcentajes", JSON.stringify(datosDias));
+            
+            // Actualizar racha del usuario cuando se completa una tarea semanal
+            // Pasamos las tareas actualizadas para verificar si ya había otra completada hoy
+            const tareasSemanaActualizadas = prev.map(t => 
+              t.id === id ? tareaActualizada : t
+            );
+            RachaModulo.actualizarRachaPorCompletado(tareasSemanaActualizadas, tareas);
+            // Nota: La verificación de mensajes de hitos se hace en app.js mediante useEffect
           }
   
           return tareaActualizada;

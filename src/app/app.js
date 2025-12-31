@@ -9,6 +9,7 @@ import MenuLateral from "@/components/layout/MenuLateral.js";
 import TopUsuarios from "@/components/visualization/TopUsuarios.js";
 import FechaModulo from "../function/FechaModulo.js";
 import UsuarioModulo from "../function/UsuarioModulo.js";
+import RachaModulo from "../function/RachaModulo.js";
 import LoginForm from "@/components/forms/LoginForm.js";
 import RegisterForm from "@/components/forms/RegisterForm.js";
 import CrearHabitoModal from "@/components/modals/CrearHabitoModal.js";
@@ -20,6 +21,7 @@ import Temporizador from "@/components/modals/Temporizador.js";
 import VisualizacionDias from "@/components/visualization/VisualizacionDias.js";
 import MensajeTodoLosDias from "@/components/visualization/MensajeTodoLosDias.js";
 import MensajeBienvenida from "@/components/visualization/MensajeBienvenida.js";
+import MensajeRacha from "@/components/visualization/MensajeRacha.js";
 import funcionesGlobales from "../function/funcionesGlobales.js";
 import { contextoStateX } from "@/Context/ProviderStateX.js";
 import ModalEditarTareaSemana from "@/components/modals/ModalEditarTareaSemana.js";
@@ -66,6 +68,12 @@ function App() {
         // Guardar la fecha actual como último mensaje diario mostrado
         localStorage.setItem("ultimoMensajeDiario", fechaActual);
       }
+    }
+
+    // Inicializar racha actual
+    if (typeof window !== "undefined") {
+      const racha = RachaModulo.obtenerRachaActual();
+      setRachaActual(racha);
     }
 
     setCargando(false);
@@ -145,6 +153,9 @@ function App() {
   const [mostrarModalNota, setMostrarModalNota] = useState(false);
   const [mostrarModalHabito, setMostrarModalHabito] = useState(false);
   const [tareaId, setTareaId] = useState(null);
+  const [rachaActual, setRachaActual] = useState(0);
+  const [mostrarMensajeRacha, setMostrarMensajeRacha] = useState(false);
+  const [mensajeRachaHito, setMensajeRachaHito] = useState(null);
 
   // Actualizar la hora actual cada segundo
   useEffect(() => {
@@ -160,46 +171,126 @@ function App() {
   }, []);
 
   // Verificar si es una nueva semana para reiniciar las tareas semanales
+  // ALGORITMO DE REINICIO SEMANAL:
+  // 1. Se calcula la fecha del lunes de la semana actual (formato YYYY-MM-DD)
+  // 2. Se compara con la última fecha de lunes registrada en localStorage
+  // 3. Si la fecha cambió (nueva semana), se reinician SOLO los campos 'completada' de todas las tareas
+  // 4. Se guarda la nueva fecha de lunes en localStorage para la próxima verificación
+  // 5. Se verifica cada hora para detectar cambios de semana incluso si la app está abierta
+  //
+  // CASOS CUBIERTOS:
+  // - Primera ejecución: no hay registro previo, se reinicia y se guarda
+  // - Cambio de semana: detecta automáticamente cuando empieza un nuevo lunes
+  // - Cambio de año: la fecha incluye el año, así que detecta correctamente
+  // - Múltiples reinicios: solo se ejecuta una vez por semana gracias a la comparación de fechas
+  // - App abierta durante el cambio: el intervalo cada hora detecta el cambio
   useEffect(() => {
     const verificarNuevaSemana = () => {
-      const semanaActual = FechaModulo.obtenerNumeroSemana();
-      
-      // Obtener la última semana registrada desde localStorage
-      const ultimaSemanaRegistrada = localStorage.getItem("ultima-semana-reinicio");
-      const ultimaSemana = ultimaSemanaRegistrada ? parseInt(ultimaSemanaRegistrada, 10) : null;
+      try {
+        // Verificar si es inicio de una nueva semana usando la fecha del lunes
+        const esNuevaSemana = FechaModulo.esInicioNuevaSemana();
+        
+        if (esNuevaSemana) {
+          const fechaInicioSemanaActual = FechaModulo.obtenerFechaInicioSemana();
+          const semanaActual = FechaModulo.obtenerNumeroSemana();
+          
+          // Reiniciar SOLO el campo 'completada' de todas las tareas semanales
+          // No se modifican otros campos como contadores, IDs, títulos, etc.
+          setTareasSemana((prev) => {
+            // Validar que prev sea un array válido
+            if (!Array.isArray(prev)) {
+              console.warn("tareasSemana no es un array válido");
+              return prev;
+            }
+            
+            // Mapear todas las tareas y resetear solo 'completada'
+            return prev.map((tarea) => {
+              // Validar que la tarea sea un objeto válido
+              if (!tarea || typeof tarea !== 'object') {
+                return tarea;
+              }
+              
+              // Resetear SOLO el campo completada a false
+              // Se mantienen todos los demás campos (titulo, dia, horaInicio, contadores, etc.)
+              return {
+                ...tarea,
+                completada: false,
+              };
+            });
+          });
 
-      // Si cambió la semana o es la primera vez, reiniciar todas las tareas
-      if (ultimaSemana === null || ultimaSemana !== semanaActual) {
-        // Reiniciar todas las tareas semanales
-        setTareasSemana((prev) =>
-          prev.map((tarea) => ({
-            ...tarea,
-            completada: false,
-            ultimaSemanReinicio: semanaActual,
-            // También reiniciar contadores si existen
-            contadorCompletadas: 0,
-            contadorNoCompletadas: 0,
-          }))
-        );
-
-        // Guardar la semana actual en localStorage
-        localStorage.setItem("ultima-semana-reinicio", semanaActual.toString());
-        setNumeroSemanaActual(semanaActual);
-      } else {
-        // Si no cambió la semana, solo actualizar el número de semana actual
-        setNumeroSemanaActual(semanaActual);
+          // Guardar la fecha del lunes actual en localStorage para futuras comparaciones
+          // Usamos fecha (YYYY-MM-DD) en lugar de número de semana para mayor precisión
+          localStorage.setItem("ultima-semana-reinicio-fecha", fechaInicioSemanaActual);
+          
+          // También guardar el número de semana para compatibilidad si se necesita
+          localStorage.setItem("ultima-semana-reinicio", semanaActual.toString());
+          
+          // Actualizar el estado del número de semana actual
+          setNumeroSemanaActual(semanaActual);
+          
+          console.log(`✅ Reinicio semanal ejecutado. Nueva semana: ${semanaActual}, Fecha inicio: ${fechaInicioSemanaActual}`);
+        } else {
+          // Si no cambió la semana, solo actualizar el número de semana actual
+          const semanaActual = FechaModulo.obtenerNumeroSemana();
+          setNumeroSemanaActual(semanaActual);
+        }
+      } catch (error) {
+        console.error("Error al verificar nueva semana:", error);
+        // En caso de error, intentar actualizar al menos el número de semana
+        try {
+          const semanaActual = FechaModulo.obtenerNumeroSemana();
+          setNumeroSemanaActual(semanaActual);
+        } catch (e) {
+          console.error("Error crítico al obtener número de semana:", e);
+        }
       }
     };
 
-    // Verificar al cargar y configurar un intervalo cada hora para detectar cambios de semana
+    // Verificar inmediatamente al cargar el componente
     verificarNuevaSemana();
+    
+    // Configurar un intervalo para verificar cada hora
+    // Esto asegura que se detecte el cambio de semana incluso si la app está abierta
+    // durante el cambio (por ejemplo, si se abre el domingo y se queda abierta hasta el lunes)
     const verificacionPeriodica = setInterval(
       verificarNuevaSemana,
-      1000 * 60 * 60 // Verificar cada hora
+      1000 * 60 * 60 // Verificar cada hora (3600000 ms)
     );
 
+    // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(verificacionPeriodica);
-  }, [setTareasSemana]);
+  }, [setTareasSemana]); // Dependencia: setTareasSemana (funcionalidad estable del contexto)
+
+  // Verificar y actualizar la racha del usuario
+  // ALGORITMO DE VERIFICACIÓN DE RACHA:
+  // 1. Se ejecuta al cargar la app y cuando cambian las tareas
+  // 2. Verifica si se completó al menos una tarea cada día
+  // 3. Si hay días sin completar, reinicia la racha
+  // 4. Verifica si se alcanzó un hito y muestra mensaje
+  useEffect(() => {
+    // Verificar racha solo en el cliente
+    if (typeof window === "undefined" || !isClient) return;
+
+    // Verificar y actualizar la racha basándose en las tareas completadas
+    // Esto verifica días pasados y actualiza la racha si es necesario
+    try {
+      RachaModulo.verificarYActualizarRacha(tareasSemana, tareas);
+      
+      // Obtener racha actual y actualizar estado
+      const racha = RachaModulo.obtenerRachaActual();
+      setRachaActual(racha);
+
+      // Verificar si se debe mostrar un mensaje de hito
+      const mensajeHito = RachaModulo.verificarMensajeHito(racha);
+      if (mensajeHito) {
+        setMensajeRachaHito(mensajeHito);
+        setMostrarMensajeRacha(true);
+      }
+    } catch (error) {
+      console.error("Error al verificar racha del usuario:", error);
+    }
+  }, [tareasSemana, tareas, isClient]); // Se ejecuta cuando cambian las tareas o se carga la app
 
   // Sincronizar fechas de finalización con fechas importantes
   useEffect(() => {
@@ -414,6 +505,16 @@ function App() {
           const hoy = new Date().toISOString().split("T")[0];
 
           if (tarea.tipo === "nota") {
+            // Para notas, actualizar racha del usuario
+            RachaModulo.actualizarRachaPorCompletado(tareasSemana, tareas);
+            // Actualizar estado de racha y verificar mensajes
+            const nuevaRacha = RachaModulo.obtenerRachaActual();
+            setRachaActual(nuevaRacha);
+            const mensajeHito = RachaModulo.verificarMensajeHito(nuevaRacha);
+            if (mensajeHito) {
+              setMensajeRachaHito(mensajeHito);
+              setMostrarMensajeRacha(true);
+            }
             return { ...tarea, completada: true };
           }
 
@@ -425,7 +526,6 @@ function App() {
           if (completadaHoy) {
             return tarea;
           }
-
 
           // La estamos completando por primera vez hoy
           const historialActualizado = [
@@ -440,6 +540,20 @@ function App() {
           const ayerCompletada = tarea.historial?.some(
             (h) => h.fecha === ayerStr && h.completada
           );
+
+          // Actualizar racha del usuario cuando se completa un hábito
+          // Usamos setTimeout para asegurar que las tareas se actualicen primero
+          setTimeout(() => {
+            RachaModulo.actualizarRachaPorCompletado(tareasSemana, tareas);
+            // Actualizar estado de racha y verificar mensajes
+            const nuevaRacha = RachaModulo.obtenerRachaActual();
+            setRachaActual(nuevaRacha);
+            const mensajeHito = RachaModulo.verificarMensajeHito(nuevaRacha);
+            if (mensajeHito) {
+              setMensajeRachaHito(mensajeHito);
+              setMostrarMensajeRacha(true);
+            }
+          }, 0);
 
           return {
             ...tarea,
@@ -554,12 +668,18 @@ function App() {
           objetivo={objetivo}
         />
       )}
-
+      {mostrarMensajeRacha && mensajeRachaHito && (
+        <MensajeRacha
+          setMostrarMensaje={setMostrarMensajeRacha}
+          mensajeHito={mensajeRachaHito}
+        />
+      )}
 
       {/* Contenido principal (solo visible si no se muestra ningún mensaje) */}
       {!mostrarBienvenida &&
         !mostrarFormularioObjetivo &&
-        !mostrarMensajeDiario && (
+        !mostrarMensajeDiario &&
+        !mostrarMensajeRacha && (
           <div className="p-8">
             {/* Encabezado */}
             <Encabezado
@@ -572,6 +692,7 @@ function App() {
               setMostrarTareas={setMostrarTareas}
               setMostrarLogin={setMostrarLogin}
               setMostrarRegistro={setMostrarRegistro}
+              rachaActual={rachaActual}
             />
 
 

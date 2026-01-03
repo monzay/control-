@@ -52,16 +52,20 @@ function CardModoVisualizacionMovilMiSemana ({
         </div>
 
         <div className="grid grid-cols-2 gap-1 text-xs text-white/70 mb-2">
-          <div>
-            <span className="text-white/50">Hora: </span>
-            {tarea.horaInicio}
-          </div>
-          <div>
-            <span className="text-white/50">
-              Duración:{" "}
-            </span>
-            {FechaModulo.formatearDuracion(tarea.duracion)}
-          </div>
+          {!tarea.sinHora && (
+            <>
+              <div>
+                <span className="text-white/50">Hora: </span>
+                {tarea.horaInicio}
+              </div>
+              <div>
+                <span className="text-white/50">
+                  Duración:{" "}
+                </span>
+                {FechaModulo.formatearDuracion(tarea.duracion)}
+              </div>
+            </>
+          )}
           <div>
             <span className="text-white/50">
               Completadas:{" "}

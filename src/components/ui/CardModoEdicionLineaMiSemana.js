@@ -29,27 +29,35 @@ function CardModoEdicionLineaMiSemana ({
           />
         </td>
         <td className="py-3 px-3">
-          <input
-            type="time"
-            value={editandoEnLinea.horaInicio}
-            onChange={(e) =>
-              setEditandoEnLinea({ ...editandoEnLinea, horaInicio: e.target.value })
-            }
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          />
+          {editandoEnLinea.sinHora ? (
+            <span className="text-xs text-white/50">-</span>
+          ) : (
+            <input
+              type="time"
+              value={editandoEnLinea.horaInicio || ""}
+              onChange={(e) =>
+                setEditandoEnLinea({ ...editandoEnLinea, horaInicio: e.target.value })
+              }
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          )}
         </td>
         <td className="py-3 px-3">
-          <input
-            type="text"
-            value={editandoEnLinea.duracion}
-            onChange={(e) =>
-              setEditandoEnLinea({
-                ...editandoEnLinea,
-                duracion:formatearYValidarHora(e.target.value),
-              })
-            }
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          />
+          {editandoEnLinea.sinHora ? (
+            <span className="text-xs text-white/50">-</span>
+          ) : (
+            <input
+              type="text"
+              value={editandoEnLinea.duracion || ""}
+              onChange={(e) =>
+                setEditandoEnLinea({
+                  ...editandoEnLinea,
+                  duracion:formatearYValidarHora(e.target.value),
+                })
+              }
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          )}
         </td>
         <td className="py-3 px-3 text-center">
           <span className={tarea.completada ? "text-emerald-400" : "text-white/50"}>

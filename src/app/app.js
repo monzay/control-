@@ -621,15 +621,20 @@ function App() {
     const ordenDias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
     
     return tareasSemana
-      .filter((tarea) => tarea && tarea.horaInicio)
+      .filter((tarea) => tarea && tarea.titulo) // Filtrar solo por existencia de título
       .sort((a, b) => {
-        // Ordenar primero por día, luego por hora
+        // Ordenar primero por día
         const indiceA = ordenDias.indexOf(a.dia);
         const indiceB = ordenDias.indexOf(b.dia);
         if (indiceA !== indiceB) {
           return indiceA - indiceB;
         }
-        return a.horaInicio.localeCompare(b.horaInicio);
+        // Si tienen el mismo día, ordenar por hora
+        // Tareas sin hora van al final
+        if (a.sinHora && !b.sinHora) return 1;
+        if (!a.sinHora && b.sinHora) return -1;
+        if (a.sinHora && b.sinHora) return 0; // Mantener orden entre tareas sin hora
+        return (a.horaInicio || "").localeCompare(b.horaInicio || "");
       });
   }, [tareasSemana]);
 

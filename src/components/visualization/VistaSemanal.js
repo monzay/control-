@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import VisualizacionDias from "./VisualizacionDias.js";
-import { Play, Edit, Trash2, Check, Sparkles, PenTool } from "lucide-react";
+import { Play, Edit, Trash2, Check, Sparkles, PenTool, X } from "lucide-react";
 
 import { CalendarDays } from "lucide-react";
 import TopUsuarios from "./TopUsuarios.js";
@@ -55,6 +55,7 @@ function VistaSemanal({
     dia: diaSemanaSeleccionado,
     horaInicio: "09:00",
     duracion: "01:00",
+    sinHora: false,
   });
 
   const { setVolverCargarTareasFiltradas } = useContext(
@@ -66,12 +67,14 @@ function VistaSemanal({
   const calcularHorasTotales = () => {
     // Función para convertir tiempo de formato HH:mm a horas
     const convertirADuracionEnHoras = (duracion) => {
+      if (!duracion) return 0; // Si no hay duración, retornar 0
       const [horas, minutos] = duracion.split(":").map(Number);
       return horas + minutos / 60;
     };
 
-    // Sumar las horas de todas las tareas
+    // Sumar las horas de todas las tareas (excluir tareas sin hora)
     const totalHoras = tareasSemanaFiltradas.reduce((total, tarea) => {
+      if (tarea.sinHora || !tarea.duracion) return total; // Ignorar tareas sin hora
       return total + convertirADuracionEnHoras(tarea.duracion);
     }, 0);
 
@@ -120,18 +123,22 @@ function VistaSemanal({
       id: `w${Date.now()}`,
       titulo: nuevaTareaSemanal.titulo,
       dia: nuevaTareaSemanal.dia,
-      horaInicio: nuevaTareaSemanal.horaInicio,
-      duracion: nuevaTareaSemanal.duracion,
+      horaInicio: nuevaTareaSemanal.sinHora ? null : nuevaTareaSemanal.horaInicio,
+      duracion: nuevaTareaSemanal.sinHora ? null : nuevaTareaSemanal.duracion,
+      sinHora: nuevaTareaSemanal.sinHora,
       completada: false,
       contadorCompletadas: 0,
       contadorNoCompletadas: 0,
       ultimaSemanReinicio: numeroSemanaActual,
     };
 
-    // Añadir la nueva tarea y ordenar por hora de inicio
+    // Añadir la nueva tarea y ordenar por hora de inicio (tareas sin hora al final)
     const tareasActualizadas = [...tareasSemana, tareaSemanal].sort((a, b) => {
       if (a.dia !== b.dia) return 0; // Solo ordenar dentro del mismo día
-      return a.horaInicio.localeCompare(b.horaInicio);
+      if (a.sinHora && !b.sinHora) return 1; // Tareas sin hora al final
+      if (!a.sinHora && b.sinHora) return -1;
+      if (a.sinHora && b.sinHora) return 0; // Mantener orden entre tareas sin hora
+      return (a.horaInicio || "").localeCompare(b.horaInicio || "");
     });
 
     setTareasSemana(tareasActualizadas);
@@ -141,8 +148,9 @@ function VistaSemanal({
     setNuevaTareaSemanal({
       titulo: "",
       dia: diaSemanaSeleccionado,
-      horaInicio: "00:00",
+      horaInicio: "09:00",
       duracion: "01:00",
+      sinHora: false,
     });
   };
 
@@ -206,14 +214,20 @@ function VistaSemanal({
 
   const guardarTareaEditadaEnLinea = () => {
     if (!editandoEnLinea) return;
+    
+    // Asegurar que si sinHora es true, horaInicio y duracion sean null
+    const tareaActualizada = {
+      ...editandoEnLinea,
+      horaInicio: editandoEnLinea.sinHora ? null : editandoEnLinea.horaInicio,
+      duracion: editandoEnLinea.sinHora ? null : editandoEnLinea.duracion,
+    };
+    
     setTareasSemana((prev) =>
       prev.map((tarea) =>
-        tarea.id === editandoEnLinea.id ? editandoEnLinea : tarea
+        tarea.id === editandoEnLinea.id ? tareaActualizada : tarea
       )
     );
     setVolverCargarTareasFiltradas(prev => !prev )
-
-    
     setEditandoEnLinea(null);
   };
 
@@ -499,70 +513,109 @@ function VistaSemanal({
 
                 {/* Formulario móvil para agregar tarea */}
                 {agregandoTareaSemanal && (
-                  <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg bg-black/30 p-3 mt-3">
-                    <h4 className="text-sm font-medium mb-2">Nueva tarea</h4>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={nuevaTareaSemanal.titulo}
-                        onChange={(e) =>
-                          setNuevaTareaSemanal({
-                            ...nuevaTareaSemanal,
-                            titulo: e.target.value,
-                          })
-                        }
-                        placeholder="Título de la tarea"
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs text-white/50 mb-1 block">
-                            Hora
-                          </label>
+                  <div className="backdrop-blur-md bg-gradient-to-br from-black/40 to-black/20 border border-emerald-500/20 rounded-xl p-5 shadow-xl mt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-base font-semibold text-white">Nueva Tarea Semanal</h4>
+                      <button
+                        onClick={() => setAgregandoTareaSemanal(false)}
+                        className="text-white/50 hover:text-white transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-medium text-white/80 mb-2">
+                          Título de la tarea
+                        </label>
+                        <input
+                          type="text"
+                          value={nuevaTareaSemanal.titulo}
+                          onChange={(e) =>
+                            setNuevaTareaSemanal({
+                              ...nuevaTareaSemanal,
+                              titulo: e.target.value,
+                            })
+                          }
+                          placeholder="Ej: Ejercicio matutino"
+                          className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm text-white placeholder-white/40 transition-all"
+                        />
+                      </div>
+                      
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
                           <input
-                            type="time"
-                            value={nuevaTareaSemanal.horaInicio}
+                            type="checkbox"
+                            id="sinHora"
+                            checked={nuevaTareaSemanal.sinHora}
                             onChange={(e) =>
                               setNuevaTareaSemanal({
                                 ...nuevaTareaSemanal,
-                                horaInicio: e.target.value,
+                                sinHora: e.target.checked,
                               })
                             }
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm"
+                            className="w-5 h-5 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                           />
-                        </div>
-                        <div>
-                          <label className="text-xs text-white/50 mb-1 block">
-                            Duración
+                          <label htmlFor="sinHora" className="text-sm text-white/90 cursor-pointer flex-1">
+                            Sin hora específica
+                            <span className="block text-xs text-white/60 mt-0.5">
+                              Completa esta tarea cuando sea necesario
+                            </span>
                           </label>
-                          <input
-                              type="text"
-                             placeholder="00:00"
-                             value={nuevaTareaSemanal.duracion}
-                            onChange={(e) =>
-                              setNuevaTareaSemanal({
-                                ...nuevaTareaSemanal,
-                                duracion:formatearYValidarHora(e.target.value)
-                              })
-                            }
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm"
-                          />
                         </div>
                       </div>
-                      <div className="flex justify-end gap-2 mt-2">
+                      
+                      {!nuevaTareaSemanal.sinHora && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-white/80 mb-2">
+                              Hora de inicio
+                            </label>
+                            <input
+                              type="time"
+                              value={nuevaTareaSemanal.horaInicio}
+                              onChange={(e) =>
+                                setNuevaTareaSemanal({
+                                  ...nuevaTareaSemanal,
+                                  horaInicio: e.target.value,
+                                })
+                              }
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm text-white transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-white/80 mb-2">
+                              Duración
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="01:30"
+                              value={nuevaTareaSemanal.duracion}
+                              onChange={(e) =>
+                                setNuevaTareaSemanal({
+                                  ...nuevaTareaSemanal,
+                                  duracion:formatearYValidarHora(e.target.value)
+                                })
+                              }
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm text-white placeholder-white/40 transition-all"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-end gap-3 pt-2">
                         <button
                           onClick={() => setAgregandoTareaSemanal(false)}
-                          className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white text-xs"
+                          className="px-4 py-2.5 rounded-lg transition-all duration-200 text-sm font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20"
                         >
                           Cancelar
                         </button>
                         <button
                           onClick={agregarTareaSemanal}
-                          className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                          className="px-4 py-2.5 rounded-lg transition-all duration-200 text-sm font-medium bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={!nuevaTareaSemanal.titulo.trim()}
                         >
-
-                          Guardar
+                          Crear Tarea
                         </button>
                       </div>
                     </div>

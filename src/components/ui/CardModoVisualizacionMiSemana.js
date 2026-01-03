@@ -46,8 +46,12 @@ function CardModoVisualizacionMiSemana({
   return (
     <>
       <td className="py-3 px-3 text-sm">{tarea.titulo}</td>
-      <td className="py-3 px-3 text-sm text-white/70">{tarea.horaInicio}</td>
-      <td className="py-3 px-3 text-sm text-white/70 ">{tarea.duracion}</td>
+      <td className="py-3 px-3 text-sm text-white/70">
+        {tarea.sinHora ? "-" : tarea.horaInicio}
+      </td>
+      <td className="py-3 px-3 text-sm text-white/70">
+        {tarea.sinHora ? "-" : tarea.duracion}
+      </td>
       <td className="py-3 px-3 text-center">
         <button
           onClick={ejecutarFuncionBtnTareaCompletada}

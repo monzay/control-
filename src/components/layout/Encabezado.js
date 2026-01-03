@@ -53,7 +53,7 @@ export default function Encabezado({
           {mostrarTareas ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
         <div className="text-xs text-white/50 hidden md:block">
-          Día {diaActualDelAnio}/{diasTotales}
+          Día {diaActualDelAnio || 1}/{diasTotales}
         </div>
       </div>
     </header>

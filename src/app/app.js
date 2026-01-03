@@ -57,8 +57,13 @@ function App() {
       setMostrarBienvenida(true);
       // Guardar que el usuario ya ha visitado la web
       localStorage.setItem("usuarioHaVisitado", "true");
-    } else if (objetivoGuardado) {
-      // El usuario tiene un objetivo guardado
+      // Guardar la fecha de partida en formato YYYY-MM-DD
+      const fechaPartida = new Date().toISOString().split("T")[0];
+      localStorage.setItem("fechaPartidaUsuario", fechaPartida);
+    }
+    
+    // Si el usuario tiene un objetivo guardado, cargarlo
+    if (objetivoGuardado) {
       setTieneObjetivo(true);
       setObjetivo(objetivoGuardado);
 
@@ -82,11 +87,6 @@ function App() {
   // Función para manejar cuando se cierra el mensaje de bienvenida
   const cerrarBienvenida = () => {
     setMostrarBienvenida(false);
-
-    // Si no hay objetivo, mostrar formulario para crear uno
-    if (!tieneObjetivo) {
-      setMostrarFormularioObjetivo(true);
-    }
   };
 
   // Función para guardar un nuevo objetivo
@@ -167,7 +167,18 @@ function App() {
 
   // Calcular el día actual del año
   useEffect(() => {
-    setDiaActualDelAnio(funcionesGlobales.ObtenerDiaNumeroDelAño());
+    const dia = funcionesGlobales.ObtenerDiaNumeroDelAño();
+    // Asegurar que siempre tenga un valor válido
+    if (dia && dia >= 1) {
+      setDiaActualDelAnio(dia);
+    } else {
+      // Fallback: calcular manualmente si hay algún problema
+      const ahora = new Date();
+      const inicioAño = new Date(ahora.getFullYear(), 0, 1);
+      const diff = ahora - inicioAño;
+      const dias = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+      setDiaActualDelAnio(Math.max(1, dias));
+    }
   }, []);
 
   // Verificar si es una nueva semana para reiniciar las tareas semanales
@@ -793,7 +804,7 @@ function App() {
                                     Tiempo restante del día
                                   </div>
                                   <div className="text-xs text-white/40 text-center mt-1">
-                                    Día {diaActualDelAnio} de {diasTotales}
+                                    Día {diaActualDelAnio || funcionesGlobales.ObtenerDiaNumeroDelAño() || 1} de {diasTotales}
                                   </div>
 
                                   {/* Barra de progreso del año */}

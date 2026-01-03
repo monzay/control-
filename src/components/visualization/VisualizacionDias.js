@@ -27,14 +27,17 @@ function VisualizacionDias({
   const [diaHover, setDiaHover] = useState(null);
   const [anioHover, setAnioHover] = useState(null); // Para saber en qué año está el hover
   const [mostrarAnioSiguiente, setMostrarAnioSiguiente] = useState(false); // Estado para mostrar/ocultar año siguiente
+  const [mostrarSoloProgreso, setMostrarSoloProgreso] = useState(false); // Estado para mostrar solo progreso sin fechas especiales
   const { todosLosDias } = useContext(ContextoDias); // return (objeto)
   const { setVolverCargarTareasFiltradas } = useContext(ContextVolverACargarTareasFiltradas);
   const [diaDeLaNot,setDiaDeLaNota] = useState(0)
   
   // Función auxiliar para obtener fecha de un día de un año específico
   const obtenerFechaDiaPorAnio = (indiceDia, anio) => {
-    const inicio = new Date(anio, 0, 0);
-    inicio.setDate(inicio.getDate() + indiceDia);
+    // El 1 de enero es el día 1, no el día 0
+    // Creamos el 1 de enero del año y le restamos 1 día, luego sumamos el índice
+    const inicio = new Date(anio, 0, 1);
+    inicio.setDate(inicio.getDate() + indiceDia - 1);
     return inicio.toISOString().split("T")[0];
   };
 
@@ -104,7 +107,16 @@ function VisualizacionDias({
       
   }
 
-  // 2. Si el día es futuro (solo para el año actual)
+  // 2. Verificar si es la fecha de partida del usuario (primera visita)
+  if (typeof window !== "undefined") {
+    const fechaPartida = localStorage.getItem("fechaPartidaUsuario");
+    if (fechaPartida && fechaDia === fechaPartida) {
+      // Color especial para la fecha de partida (naranja/dorado)
+      return "bg-gradient-to-r from-orange-500 to-amber-500";
+    }
+  }
+
+  // 3. Si el día es futuro (solo para el año actual)
   if (anio === anioActual && dia > diaActualDelAnio) return "bg-gray-800";
   
   // Para el año siguiente, todos los días son futuros
@@ -160,6 +172,49 @@ function VisualizacionDias({
   return "bg-gradient-to-r from-green-400 to-green-300";
 };
 
+  // Función que solo muestra el progreso de actividad sin fechas especiales
+  const obtenerColorSoloProgreso = (dia, anio = anioActual) => {
+    const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
+
+    // 1. Si el día es futuro (solo para el año actual)
+    if (anio === anioActual && dia > diaActualDelAnio) return "bg-gray-800";
+    
+    // Para el año siguiente, todos los días son futuros
+    if (anio === anioSiguiente) return "bg-gray-800";
+
+    // 2. Obtener el porcentaje de completado (sin considerar fechas especiales)
+    let porcentajeCompletado = 0;
+
+    const obtenerPorcentajeDesdeStorage = () => {
+      const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
+      if (!datosAlmacenados) return null;
+
+      try {
+        const datosDias = JSON.parse(datosAlmacenados);
+        return datosDias.find(d => d.fecha === fechaDia) || null;
+      } catch {
+        return null;
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      const datoExistente = obtenerPorcentajeDesdeStorage();
+      if (datoExistente) {
+        porcentajeCompletado = datoExistente.porcentaje;
+      } else {
+        porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio);
+      }
+    } else {
+      porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio); // SSR fallback
+    }
+
+    // 3. Devolver el color según el porcentaje (solo verdes)
+    if (porcentajeCompletado < 25) return "bg-gradient-to-r from-green-900 to-green-800";
+    if (porcentajeCompletado < 50) return "bg-gradient-to-r from-green-700 to-green-600";
+    if (porcentajeCompletado < 75) return "bg-gradient-to-r from-green-500 to-green-400";
+    return "bg-gradient-to-r from-green-400 to-green-300";
+  };
+
 
   // Obtener título para el tooltip
   const obtenerTituloTooltip = (dia, anio = anioActual) => {
@@ -177,8 +232,18 @@ function VisualizacionDias({
       const dd = String(date.getDate()).padStart(2, "0");
 
       const fecha = `${yyyy}-${mm}-${dd}`;
+      
+      // Verificar si es la fecha de partida del usuario
+      if (typeof window !== "undefined") {
+        const fechaPartida = localStorage.getItem("fechaPartidaUsuario");
+        if (fechaPartida && fecha === fechaPartida) {
+          return "Fecha de partida";
+        }
+      }
+
+
       const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
-      if (!datosAlmacenados) return `Día ${dia} - ${year}`;
+      if (!datosAlmacenados) return `Día ${dia}`;
       
       try {
         const datos = JSON.parse(datosAlmacenados);
@@ -189,7 +254,7 @@ function VisualizacionDias({
       } catch {
         // Si hay error al parsear, continuar
       }
-      return `Día ${dia} - ${year}`;
+      return `Día ${dia}`;
     }
     return mostrarMensajeTooltip(dia, anio);
   };
@@ -218,7 +283,7 @@ function VisualizacionDias({
               <div
                 key={`${anio}-${index}`}
                 style={{ borderRadius: "1px" }}
-                className={`w-3 h-3 ${obtenerColorActividad(dia, anio)} relative cursor-pointer`}
+                className={`w-3 h-3 ${mostrarSoloProgreso ? obtenerColorSoloProgreso(dia, anio) : obtenerColorActividad(dia, anio)} relative cursor-pointer`}
                 onMouseEnter={() => {
                   setDiaDeLaNota(dia);
                   setDiaHover(dia);
@@ -266,24 +331,41 @@ function VisualizacionDias({
             {mostrarAnioSiguiente ? (
               <>Año {anioSiguiente}</>
             ) : (
-              <>Día {diaActualDelAnio}/{diasTotales} del año {anioActual}</>
+              <>Día {diaActualDelAnio || funcionesGlobales.ObtenerDiaNumeroDelAño() || 1}/{diasTotales} del año {anioActual}</>
             )}
           </div>
         </div>
-        <button
-          onClick={() => setMostrarAnioSiguiente(!mostrarAnioSiguiente)}
-          className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
-        >
-          {mostrarAnioSiguiente ? (
-            <>
-              <span>Ver {anioActual}</span>
-            </>
-          ) : (
-            <>
-              <span>Ver {anioSiguiente}</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMostrarSoloProgreso(!mostrarSoloProgreso)}
+            className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
+            title={mostrarSoloProgreso ? "Mostrar todas las fechas especiales" : "Mostrar solo progreso"}
+          >
+            {mostrarSoloProgreso ? (
+              <>
+                <span>Mostrar todo</span>
+              </>
+            ) : (
+              <>
+                <span>Solo progreso</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setMostrarAnioSiguiente(!mostrarAnioSiguiente)}
+            className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
+          >
+            {mostrarAnioSiguiente ? (
+              <>
+                <span>Ver {anioActual}</span>
+              </>
+            ) : (
+              <>
+                <span>Ver {anioSiguiente}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 min-w-[700px]">
@@ -307,16 +389,22 @@ function VisualizacionDias({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-sm bg-purple-500"></div>
-          <span className="text-xs text-white/50">Fin de hábito</span>
+      {!mostrarSoloProgreso && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-gradient-to-r from-orange-500 to-amber-500"></div>
+            <span className="text-xs text-white/50">Fecha de partida</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-purple-500"></div>
+            <span className="text-xs text-white/50">Fin de hábito</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
+            <span className="text-xs text-white/50">Recordatorio de nota</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
-          <span className="text-xs text-white/50">Recordatorio de nota</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

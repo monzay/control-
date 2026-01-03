@@ -12,11 +12,24 @@ const funcionesGlobales = {
   },
   ObtenerDiaNumeroDelAño: () => {
     const ahora = new Date();
-    const inicio = new Date(ahora.getFullYear(), 0, 0);
-    const diff = ahora - inicio.getTime();
+    const año = ahora.getFullYear();
+    // Obtener el 1 de enero del año actual a las 00:00:00
+    const inicioAño = new Date(año, 0, 1);
+    inicioAño.setHours(0, 0, 0, 0);
+    
+    // Ajustar la fecha actual a las 00:00:00 para un cálculo preciso
+    const fechaActual = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    fechaActual.setHours(0, 0, 0, 0);
+    
+    // Calcular la diferencia en milisegundos
+    const diff = fechaActual.getTime() - inicioAño.getTime();
+    
+    // Convertir a días (agregar 1 porque el 1 de enero es el día 1, no 0)
     const unDia = 1000 * 60 * 60 * 24;
-    const dia = Math.floor(diff / unDia);
-    return dia;
+    const dia = Math.floor(diff / unDia) + 1;
+    
+    // Asegurar que el valor sea válido (entre 1 y 366)
+    return Math.max(1, Math.min(366, dia));
   },
   // aun no estan siendo usadas
   iniciarCronometro: function (valor) {

@@ -8,7 +8,7 @@ export default function Cronometro({ horaActual, diaActualDelAnio, diasTotales, 
           </div>
           <div className="text-sm text-white/50 text-center">Tiempo restante del día</div>
           <div className="text-xs text-white/40 text-center mt-1">
-            Día {diaActualDelAnio} de {diasTotales}
+            Día {diaActualDelAnio || 1} de {diasTotales}
           </div>
           <div className="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div

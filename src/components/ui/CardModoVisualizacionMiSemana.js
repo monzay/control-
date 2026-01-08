@@ -21,7 +21,6 @@ function CardModoVisualizacionMiSemana({
  
 
   
-  const {setTodosLosDias} = useContext(ContextoDias)
 
   function ejecutarFuncionBtnTareaCompletada(){
 
@@ -37,11 +36,6 @@ function CardModoVisualizacionMiSemana({
 
 
 
-  // Capitalizar primera letra del día
-  const capitalizarDia = (dia) => {
-    if (!dia) return "";
-    return dia.charAt(0).toUpperCase() + dia.slice(1);
-  };
 
   return (
     <>

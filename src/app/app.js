@@ -2,7 +2,6 @@
 
 import Chat from "@/components/visualization/Chat";
 import { useState, useEffect, useContext, useCallback } from "react";
-import { AnimatePresence } from "framer-motion";
 import Encabezado from "@/components/layout/Encabezado.js";
 import { X, Plus, Sparkles, PenTool } from "lucide-react";
 import MenuLateral from "@/components/layout/MenuLateral.js";
@@ -58,7 +57,12 @@ function App() {
       // Guardar que el usuario ya ha visitado la web
       localStorage.setItem("usuarioHaVisitado", "true");
       // Guardar la fecha de partida en formato YYYY-MM-DD
-      const fechaPartida = new Date().toISOString().split("T")[0];
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const fechaPartida = `${y}-${m}-${day}`;
+      
       localStorage.setItem("fechaPartidaUsuario", fechaPartida);
     }
     
@@ -149,7 +153,6 @@ function App() {
   const [mostrarLogin, setMostrarLogin] = useState(false);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [mostrarMenuCreacion, setMostrarMenuCreacion] = useState(false);
-  const [chats, setChats] = useState([]); // Inicializar chats como array vacío
   const [mostrarModalNota, setMostrarModalNota] = useState(false);
   const [mostrarModalHabito, setMostrarModalHabito] = useState(false);
   const [tareaId, setTareaId] = useState(null);
@@ -165,6 +168,10 @@ function App() {
     return () => clearInterval(temporizador);
   }, []);
 
+
+   useEffect(()=>{
+    console.log(diaActualDelAnio)
+   },[diaActualDelAnio])
   // Calcular el día actual del año
   useEffect(() => {
     const dia = funcionesGlobales.ObtenerDiaNumeroDelAño();
@@ -180,6 +187,7 @@ function App() {
       setDiaActualDelAnio(Math.max(1, dias));
     }
   }, []);
+
 
   // Verificar si es una nueva semana para reiniciar las tareas semanales
   // ALGORITMO DE REINICIO SEMANAL:
@@ -430,18 +438,23 @@ function App() {
           ? Math.floor((completadas / tareasDelDia.length) * 100)
           : 0;
 
-      const fechaHoy = new Date().toISOString().split("T")[0];
+          const d = new Date();
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          const fechaPartida = `${y}-${m}-${day}`;
+
       const datosGuardados =
         JSON.parse(localStorage.getItem("datos-dias-porcentajes")) || [];
 
       const indiceExistente = datosGuardados.findIndex(
-        (dato) => dato.fecha === fechaHoy
+        (dato) => dato.fecha === fechaPartida
       );
 
       if (indiceExistente !== -1) {
         datosGuardados[indiceExistente].porcentaje = porcentaje;
       } else {
-        datosGuardados.push({ fecha: fechaHoy, porcentaje });
+        datosGuardados.push({ fecha: fechaPartida, porcentaje });
       }
 
       localStorage.setItem(

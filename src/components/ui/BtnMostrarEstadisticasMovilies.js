@@ -1,9 +1,4 @@
 
-/**
- * @param {boolean} mostrarEstadisticas - Estado que controla si se muestran las estadísticas
- * @param {function} setMostrarEstadisticas - Función para actualizar el estado de mostrarEstadisticas
- */
-
 import { BarChart2 } from "lucide-react";
 function BtnMostrarEstadisticasMoviles({ mostrarEstadisticas, setMostrarEstadisticas }) {
   return (

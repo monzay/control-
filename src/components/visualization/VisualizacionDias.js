@@ -1,9 +1,7 @@
-import { useContext, useEffect, useState } from "react";
-import FechaModulo from "@/function/FechaModulo.js";
-import { ContextoDias } from "@/Context/ProviderDias";
+import { useContext, useState } from "react";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas";
 import funcionesGlobales from "@/function/funcionesGlobales";
-import { data } from "autoprefixer";
+
 
 
 /**
@@ -28,7 +26,6 @@ function VisualizacionDias({
   const [anioHover, setAnioHover] = useState(null); // Para saber en qué año está el hover
   const [mostrarAnioSiguiente, setMostrarAnioSiguiente] = useState(false); // Estado para mostrar/ocultar año siguiente
   const [mostrarSoloProgreso, setMostrarSoloProgreso] = useState(false); // Estado para mostrar solo progreso sin fechas especiales
-  const { todosLosDias } = useContext(ContextoDias); // return (objeto)
   const { setVolverCargarTareasFiltradas } = useContext(ContextVolverACargarTareasFiltradas);
   const [diaDeLaNot,setDiaDeLaNota] = useState(0)
   
@@ -261,12 +258,6 @@ function VisualizacionDias({
 
 
 
-  const calcularDiasAntesDeLaNota = ()=> {
-       const fechaNota =  249
-       const cantidadDeDiasAntesDeLaNota =  30 // 1 mes 
-      return  fechaNota - cantidadDeDiasAntesDeLaNota
-  }
-  
 
   // Función para renderizar una cuadrícula de año
   const renderizarCuadriculaAnio = (anio, esAnioActual) => {

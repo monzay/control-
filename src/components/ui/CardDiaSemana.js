@@ -1,9 +1,4 @@
-/**
- * Componente que muestra los días de la semana como botones seleccionables
- * @param {function} setDiaSemanaSeleccionado - Función para actualizar el día seleccionado
- * @param {string} diaSemanaSeleccionado - Día de la semana actualmente seleccionado
- * @param {Array<string>} diasSemana - Array con los nombres de los días de la semana
- */
+
 import { useContext } from "react";
 import { ContextVolverACargarTareasFiltradas } from "@/Context/ProviderVolverACargarTareasFiltradas";
 

@@ -20,3 +20,4 @@ export default function Cronometro({ horaActual, diaActualDelAnio, diasTotales, 
       </div>
     );
   }
+  

@@ -1,13 +1,3 @@
-/**
- * Componente que representa una fila en modo edición para una tarea de Mi Semana
- * @param {Object} editandoEnLinea - Estado que contiene los datos de la tarea en edición
- * @param {Function} setEditandoEnLinea - Función para actualizar el estado de edición
- * @param {Object} tarea - Objeto con los datos de la tarea original
- * @param {Function} guardarTareaEditadaEnLinea - Función para guardar los cambios
- * 
- */
-
-
 import { formatearYValidarHora } from "@/function/FormatearYValidarHora"
 import { Save,X  } from "lucide-react"
 

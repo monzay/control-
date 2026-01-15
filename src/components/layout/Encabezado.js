@@ -31,7 +31,11 @@ export default function Encabezado({
             </span>
           </div>
         )}
-        <button
+
+
+
+      {
+        /*  <button
           onClick={() => false }
           className="px-3 py-1.5 rounded-lg transition-colors duration-200 text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
         >
@@ -44,7 +48,8 @@ export default function Encabezado({
         >
           <UserPlus className="h-4 w-4" />
           <span className="hidden md:inline">Registrarse</span>
-        </button>
+        </button> */
+      }
         <button
           onClick={() => setMostrarTareas(!mostrarTareas)}
           className="p-1.5 rounded-full transition-colors duration-200 text-white/70 hover:text-white"

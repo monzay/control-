@@ -10,6 +10,8 @@ export default function Encabezado({
   setMostrarTareas,
   rachaActual = 0,
 }) {
+
+  
   return (
     <header className="sticky top-0 z-30 bg-black/30 backdrop-filter backdrop-blur-md border-b border-white/5 py-3 px-4 flex items-center justify-between">
       <div className="flex items-center gap-3">

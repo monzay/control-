@@ -72,13 +72,6 @@ function CardModoVisualizacionMiSemana({
       <td className="py-3 px-3 text-right">
         <div className="flex items-center justify-end gap-1">
           <button
-            onClick={() => iniciarTemporizadorTarea(tarea)}
-            className="text-white/30 hover:text-emerald-400 p-1 rounded-full transition-colors"
-            title="Iniciar tarea"
-          >
-            <Play className="h-3 w-3" />
-          </button>
-          <button
             onClick={() => {
               iniciarEdicionEnLinea(tarea)
             }}

@@ -89,7 +89,7 @@ function EditarTareaModal({ tarea, onClose, onSave }) {
               <textarea
                 value={tareaEditada.descripcion || ""}
                 onChange={(e) => setTareaEditada({ ...tareaEditada, descripcion: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-h-[80px]"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-h-[100px] resize-y"
                 placeholder={`Descripción del ${tareaEditada.tipo === "habito" ? "hábito" : "nota"}`}
               ></textarea>
             </div>

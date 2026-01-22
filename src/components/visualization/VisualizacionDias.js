@@ -22,6 +22,10 @@ function VisualizacionDias({
   // Configuración para que se vea como la imagen de referencia
   const anioActual = new Date().getFullYear();
   const anioSiguiente = anioActual + 1;
+  
+  // Valores por defecto para evitar undefined
+  const diaActualDelAnioValido = diaActualDelAnio ?? funcionesGlobales.ObtenerDiaNumeroDelAño() ?? 1;
+  const diasTotalesValido = diasTotales ?? 365;
   const [diaHover, setDiaHover] = useState(null);
   const [anioHover, setAnioHover] = useState(null); // Para saber en qué año está el hover
   const [mostrarAnioSiguiente, setMostrarAnioSiguiente] = useState(false); // Estado para mostrar/ocultar año siguiente
@@ -89,7 +93,7 @@ function VisualizacionDias({
   const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
 
   // 1. Verificar si es una fecha importante
-  if (fechaImportante) {
+  if (fechaImportante && fechaImportante.tipo) {
     const coloresPorTipo = {
       "habito-fin": "bg-purple-500",
       "nota": "bg-blue-500",
@@ -114,7 +118,7 @@ function VisualizacionDias({
   }
 
   // 3. Si el día es futuro (solo para el año actual)
-  if (anio === anioActual && dia > diaActualDelAnio) return "bg-gray-800";
+  if (anio === anioActual && dia > diaActualDelAnioValido) return "bg-gray-800";
   
   // Para el año siguiente, todos los días son futuros
   if (anio === anioSiguiente) return "bg-gray-800";
@@ -152,12 +156,12 @@ function VisualizacionDias({
 
   if (typeof window !== "undefined") {
     const datoExistente = obtenerPorcentajeDesdeStorage();
-    if (datoExistente) {
-      porcentajeCompletado = datoExistente.porcentaje;
-    } else {
-      porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio);
-      guardarDatoEnStorage({ fecha: fechaDia, porcentaje: porcentajeCompletado, dia, mensaje: null });
-    }
+      if (datoExistente) {
+        porcentajeCompletado = datoExistente.porcentaje ?? 0;
+      } else {
+        porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio);
+        guardarDatoEnStorage({ fecha: fechaDia, porcentaje: porcentajeCompletado, dia, mensaje: null });
+      }
   } else {
     porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio); // SSR fallback
   }
@@ -174,7 +178,7 @@ function VisualizacionDias({
     const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
 
     // 1. Si el día es futuro (solo para el año actual)
-    if (anio === anioActual && dia > diaActualDelAnio) return "bg-gray-800";
+    if (anio === anioActual && dia > diaActualDelAnioValido) return "bg-gray-800";
     
     // Para el año siguiente, todos los días son futuros
     if (anio === anioSiguiente) return "bg-gray-800";
@@ -197,7 +201,7 @@ function VisualizacionDias({
     if (typeof window !== "undefined") {
       const datoExistente = obtenerPorcentajeDesdeStorage();
       if (datoExistente) {
-        porcentajeCompletado = datoExistente.porcentaje;
+        porcentajeCompletado = datoExistente.porcentaje ?? 0;
       } else {
         porcentajeCompletado = calcularPorcentajeCompletadoPorDia(dia, anio);
       }
@@ -216,44 +220,47 @@ function VisualizacionDias({
   // Obtener título para el tooltip
   const obtenerTituloTooltip = (dia, anio = anioActual) => {
     const fechaImportante = obtenerInfoFechaImportante(dia, anio);
-    if (fechaImportante) {
-      return fechaImportante.titulo;
+    
+    const date = new Date(anio, 0); // enero es el mes 0
+    date.setDate(dia);
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+
+    const fecha = `${yyyy}-${mm}-${dd}`;
+    
+    // Siempre incluir el número del día del año al inicio
+    let mensaje = `Día ${dia}`;
+    
+    // Si hay una fecha importante (nota, hábito, etc.), agregarla al mensaje
+    if (fechaImportante && fechaImportante.titulo) {
+      mensaje += ` - ${fechaImportante.titulo}`;
+    }
+    
+    // Verificar si es la fecha de partida del usuario
+    if (typeof window !== "undefined") {
+      const fechaPartida = localStorage.getItem("fechaPartidaUsuario");
+      if (fechaPartida && fecha === fechaPartida) {
+        mensaje += " - Fecha de partida";
+      }
     }
 
-    function mostrarMensajeTooltip(dayOfYear, year) {
-      const date = new Date(year, 0); // enero es el mes 0
-      date.setDate(dayOfYear);
-
-      const yyyy = date.getFullYear();
-      const mm = String(date.getMonth() + 1).padStart(2, "0");
-      const dd = String(date.getDate()).padStart(2, "0");
-
-      const fecha = `${yyyy}-${mm}-${dd}`;
-      
-      // Verificar si es la fecha de partida del usuario
-      if (typeof window !== "undefined") {
-        const fechaPartida = localStorage.getItem("fechaPartidaUsuario");
-        if (fechaPartida && fecha === fechaPartida) {
-          return "Fecha de partida";
-        }
-      }
-
-
-      const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
-      if (!datosAlmacenados) return `Día ${dia}`;
-      
+    // Verificar si hay un mensaje personalizado almacenado
+    const datosAlmacenados = localStorage.getItem("datos-dias-porcentajes");
+    if (datosAlmacenados) {
       try {
         const datos = JSON.parse(datosAlmacenados);
         const dataActividad = datos.find((prev) => prev.fecha === fecha);
-        if (dataActividad && dataActividad.mensaje !== null) {
-          return `${dataActividad.mensaje}`;
+        if (dataActividad && dataActividad.mensaje !== null && dataActividad.mensaje !== undefined) {
+          mensaje += ` - ${dataActividad.mensaje}`;
         }
       } catch {
         // Si hay error al parsear, continuar
       }
-      return `Día ${dia}`;
     }
-    return mostrarMensajeTooltip(dia, anio);
+    
+    return mensaje;
   };
 
 
@@ -269,7 +276,7 @@ function VisualizacionDias({
         <div className="grid grid-rows-7 grid-flow-col gap-1">
           {Array.from({ length: 365 }).map((_, index) => {
             const dia = index + 1;
-            const esDiaActual = esAnioActual && dia === diaActualDelAnio;
+            const esDiaActual = esAnioActual && dia === diaActualDelAnioValido;
             return (
               <div
                 key={`${anio}-${index}`}
@@ -322,7 +329,7 @@ function VisualizacionDias({
             {mostrarAnioSiguiente ? (
               <>Año {anioSiguiente}</>
             ) : (
-              <>Día {diaActualDelAnio || funcionesGlobales.ObtenerDiaNumeroDelAño() || 1}/{diasTotales} del año {anioActual}</>
+              <>Día {diaActualDelAnioValido}/{diasTotalesValido} del año {anioActual}</>
             )}
           </div>
         </div>

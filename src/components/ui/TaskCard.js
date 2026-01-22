@@ -1,5 +1,6 @@
 import { Edit, Trash2, Clock, Calendar, Info, Check } from "lucide-react"
 import IconoModulo from "@/function/IconoModulo.js"
+import { formatearTextoConLinks } from "@/function/FormatearTextoConLinks.js"
 export default function TaskCard({
   tarea,
   onEdit,
@@ -51,7 +52,9 @@ export default function TaskCard({
         </h3>
 
         {tarea.descripcion && (
-          <p className="text-sm text-white/70 mb-3">{tarea.descripcion}</p>
+          <p className="text-sm text-white/70 mb-3 whitespace-pre-wrap break-words">
+            {formatearTextoConLinks(tarea.descripcion)}
+          </p>
         )}
 
         <div className="mt-auto pt-3 flex items-center justify-between">

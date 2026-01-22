@@ -80,8 +80,8 @@ function CrearNotaModal({ onClose, onSuccess }) {
             <textarea
               value={nuevaNota.descripcion}
               onChange={(e) => setNuevaNota({ ...nuevaNota, descripcion: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 min-h-[100px]"
-              placeholder="Descripción de la nota"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 min-h-[100px] resize-y"
+              placeholder="Descripción de la nota (puedes pegar links y serán clicables)"
             ></textarea>
           </div>
 

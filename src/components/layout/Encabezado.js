@@ -33,7 +33,6 @@ export default function Encabezado({
         )}
 
 
-
       {
         /*  <button
           onClick={() => false }

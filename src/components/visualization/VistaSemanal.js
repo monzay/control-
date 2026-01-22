@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import VisualizacionDias from "./VisualizacionDias.js";
-import { Play, Edit, Trash2, Check, Sparkles, PenTool, X } from "lucide-react";
+import { Play, Edit, Trash2, Check, PenTool, X } from "lucide-react";
 
 import { CalendarDays } from "lucide-react";
 import TopUsuarios from "./TopUsuarios.js";
@@ -72,9 +72,15 @@ function VistaSemanal({
       return horas + minutos / 60;
     };
 
-    // Sumar las horas de todas las tareas (excluir tareas sin hora)
-    const totalHoras = tareasSemanaFiltradas.reduce((total, tarea) => {
-      if (tarea.sinHora || !tarea.duracion) return total; // Ignorar tareas sin hora
+    // Filtrar tareas del día seleccionado
+    const tareasDelDia = tareasSemanaFiltradas.filter(
+      (tarea) => tarea.dia === diaSemanaSeleccionado
+    );
+
+    // Sumar las horas de todas las tareas del día (excluir tareas sin hora y duración)
+    const totalHoras = tareasDelDia.reduce((total, tarea) => {
+      // Ignorar tareas sin hora específica, sin duración o sin horaInicio
+      if (tarea.sinHora || !tarea.duracion || !tarea.horaInicio) return total;
       return total + convertirADuracionEnHoras(tarea.duracion);
     }, 0);
 
@@ -201,7 +207,10 @@ function VistaSemanal({
     // Añadir las tareas clonadas a las tareas existentes y ordenar
     const tareasActualizadas = [...tareasSemana, ...tareasClonadas].sort((a, b) => {
       if (a.dia !== b.dia) return 0; // Solo ordenar dentro del mismo día
-      return a.horaInicio.localeCompare(b.horaInicio);
+      if (a.sinHora && !b.sinHora) return 1; // Tareas sin hora al final
+      if (!a.sinHora && b.sinHora) return -1;
+      if (a.sinHora && b.sinHora) return 0; // Mantener orden entre tareas sin hora
+      return (a.horaInicio || "").localeCompare(b.horaInicio || "");
     });
 
     setTareasSemana(tareasActualizadas);
@@ -273,8 +282,8 @@ function VistaSemanal({
   }, [diaSemanaSeleccionado]);
 
   // Filtrar tareas según el filtro activo
-  // Convertir "habitos" -> "habito" y "notas" -> "nota"
-  const tipoFiltro = filtroActivo === "habitos" ? "habito" : filtroActivo === "notas" ? "nota" : null;
+  // Convertir "notas" -> "nota"
+  const tipoFiltro = filtroActivo === "notas" ? "nota" : null;
   const tareasFiltradas = tipoFiltro && Array.isArray(tareas)
     ? tareas.filter(tarea => {
         // Validar que la tarea tenga las propiedades necesarias
@@ -316,17 +325,13 @@ function VistaSemanal({
           setVistaActiva={setVistaActiva}
         />
 
-        {/* Mostrar notas o hábitos si hay filtro activo - fuera de Mi Semana */}
-        {filtroActivo && (
+        {/* Mostrar notas si hay filtro activo - fuera de Mi Semana */}
+        {filtroActivo === "notas" && (
           <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg mb-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
               <h2 className="text-lg font-medium flex items-center gap-2 text-white/90">
-                {filtroActivo === "habitos" ? (
-                  <Sparkles className="h-5 w-5 text-emerald-400" />
-                ) : (
-                  <PenTool className="h-5 w-5 text-emerald-400" />
-                )}
-                {filtroActivo === "habitos" ? "Hábitos" : "Notas"}
+                <PenTool className="h-5 w-5 text-emerald-400" />
+                Notas
                 <span className="text-xs text-white/50 ml-2">
                   ({tareasFiltradas.length})
                 </span>
@@ -345,7 +350,7 @@ function VistaSemanal({
                 ))
               ) : (
                 <div className="col-span-3 py-8 text-center text-white/40 text-sm">
-                  No hay {filtroActivo === "habitos" ? "hábitos" : "notas"} disponibles.
+                  No hay notas disponibles.
                 </div>
               )}
             </div>

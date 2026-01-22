@@ -3,7 +3,7 @@
 import Chat from "@/components/visualization/Chat";
 import { useState, useEffect, useContext, useCallback } from "react";
 import Encabezado from "@/components/layout/Encabezado.js";
-import { X, Plus, Sparkles, PenTool } from "lucide-react";
+import { X, Plus, PenTool } from "lucide-react";
 import MenuLateral from "@/components/layout/MenuLateral.js";
 import TopUsuarios from "@/components/visualization/TopUsuarios.js";
 import FechaModulo from "../function/FechaModulo.js";
@@ -11,8 +11,8 @@ import UsuarioModulo from "../function/UsuarioModulo.js";
 import RachaModulo from "../function/RachaModulo.js";
 import LoginForm from "@/components/forms/LoginForm.js";
 import RegisterForm from "@/components/forms/RegisterForm.js";
-import CrearHabitoModal from "@/components/modals/CrearHabitoModal.js";
 import CrearNotaModal from "@/components/modals/CrearNotaModal";
+import DashboardEstadisticas from "@/components/visualization/DashboardEstadisticas";
 import AnimacionModulo from "../function/Confeti.js";
 import TaskCard from "../components/ui/TaskCard";
 import VistaSemanal from "@/components/visualization/VistaSemanal";
@@ -154,7 +154,6 @@ function App() {
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [mostrarMenuCreacion, setMostrarMenuCreacion] = useState(false);
   const [mostrarModalNota, setMostrarModalNota] = useState(false);
-  const [mostrarModalHabito, setMostrarModalHabito] = useState(false);
   const [tareaId, setTareaId] = useState(null);
   const [rachaActual, setRachaActual] = useState(0);
   const [mostrarMensajeRacha, setMostrarMensajeRacha] = useState(false);
@@ -604,8 +603,6 @@ function App() {
     );
     
     switch (vistaActiva) {
-      case "habitos":
-        return validTareas.filter((tarea) => tarea.tipo === "habito");
       case "notas":
         return validTareas.filter((tarea) => tarea.tipo === "nota");
       case "calendario":
@@ -771,6 +768,8 @@ function App() {
                         />
                       ) : vistaActiva === "Objetivo" ? (
                         <Chat/>
+                      ) : vistaActiva === "estadisticas" ? (
+                        <DashboardEstadisticas />
                       ) : (
                         <div className="flex flex-col md:flex-row gap-4">
                           {/* Contenedor principal  cde tareas */}
@@ -860,15 +859,6 @@ function App() {
               />
             )}
 
-            {mostrarModalHabito && (
-              <CrearHabitoModal
-                onClose={() => setMostrarModalHabito(false)}
-                onSuccess={(habito) => {
-                  agregarTarea(habito);
-                  setMostrarModalHabito(false);
-                }}
-              />
-            )}
 
             {/* Modal para editar tarea semanal */}
             {editandoTareaSemanal && (
@@ -921,16 +911,6 @@ function App() {
                 {/* Menú desplegable */}
                 {mostrarMenuCreacion && (
                   <div className="absolute bottom-16 right-0 backdrop-blur-md bg-black/20 border border-white/10 rounded-xl p-4 shadow-lg rounded-lg shadow-lg overflow-hidden border border-white/10 w-48">
-                    <button
-                      onClick={() => {
-                        setMostrarModalHabito(true);
-                        setMostrarMenuCreacion(false);
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-white/10 flex items-center gap-2"
-                    >
-                      <Sparkles className="h-4 w-4 text-emerald-400" />
-                      <span>Nuevo Hábito</span>
-                    </button>
                     <button
                       onClick={() => {
                         setMostrarModalNota(true);

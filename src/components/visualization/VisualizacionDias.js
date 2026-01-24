@@ -220,7 +220,6 @@ function VisualizacionDias({
   // Obtener título para el tooltip
   const obtenerTituloTooltip = (dia, anio = anioActual) => {
     const fechaImportante = obtenerInfoFechaImportante(dia, anio);
-    
     const date = new Date(anio, 0); // enero es el mes 0
     date.setDate(dia);
 
@@ -256,14 +255,36 @@ function VisualizacionDias({
           mensaje += ` - ${dataActividad.mensaje}`;
         }
       } catch {
-        // Si hay error al parsear, continuar
+        // Si hay error al parsear, continuar 
       }
     }
+  
     
     return mensaje;
   };
 
 
+
+  const tooltipPorcentaje = (dia, anio = anioActual) => {
+    const fechaImportante = obtenerInfoFechaImportante(dia, anio);
+    const date = new Date(anio, 0); // enero es el mes 0
+    date.setDate(dia);
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+
+    const fecha = `${yyyy}-${mm}-${dd}`;
+    
+    // Siempre incluir el número del día del año al inicio
+    let mensaje = `Día ${dia}`;
+    // Si hay una fecha importante (nota, hábito, etc.), agregarla al mensaje
+    if (fechaImportante && fechaImportante.titulo) {
+      mensaje += ` - ${fechaImportante.titulo}`;
+    }
+    
+    return mensaje;
+  };
 
 
   // Función para renderizar una cuadrícula de año

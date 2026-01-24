@@ -34,9 +34,6 @@ function CardModoVisualizacionMiSemana({
   }
 
 
-
-
-
   return (
     <>
       <td className="py-3 px-3 text-sm">{tarea.titulo}</td>
@@ -60,14 +57,8 @@ function CardModoVisualizacionMiSemana({
         </button>
       </td>
       <td className="py-3 px-3 text-center">
-        <span className="text-emerald-400 text-xs">
-          {tarea.contadorCompletadas}
-        </span>
       </td>
       <td className="py-3 px-3 text-center">
-        <span className="text-emerald-400 text-xs">
-          {tarea.contadorNoCompletadas}
-        </span>
       </td>
       <td className="py-3 px-3 text-right">
         <div className="flex items-center justify-end gap-1">

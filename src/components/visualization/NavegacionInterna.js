@@ -1,15 +1,11 @@
 import {
   CalendarDays,
-  Home,
   PenTool,
-  MessageCircle,
   Settings,
-  BarChart3,
 } from "lucide-react"
 
 const vistas = [
   { id: "semana", label: "Mi Semana", icon: CalendarDays },
-  { id: "estadisticas", label: "Estadísticas", icon: BarChart3 },
   { id: "notas", label: "Notas", icon: PenTool },
 ]
 

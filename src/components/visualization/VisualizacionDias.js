@@ -80,10 +80,16 @@ function VisualizacionDias({
     return (totalCompletadas / todasLasTareasDelDia.length) * 100;
   };
 
-  // Obtener información de fechas importantes para un día
+  // Obtener información de fechas importantes para un día (primera coincidencia, para color)
   const obtenerInfoFechaImportante = (dia, anio = anioActual) => {
     const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
     return fechasImportantes.find((fecha) => fecha.fecha === fechaDia);
+  };
+
+  // Todas las fechas importantes del día (para tooltip y onClick)
+  const obtenerInfoFechasImportantes = (dia, anio = anioActual) => {
+    const fechaDia = obtenerFechaDiaPorAnio(dia, anio);
+    return fechasImportantes.filter((fecha) => fecha.fecha === fechaDia);
   };
 
   // Mapea porcentaje de completado a clase de color verde
@@ -111,11 +117,11 @@ function VisualizacionDias({
     }
   };
 
-  // Obtener nota mensual que coincide con el día del mes de este día
+  // Todas las notas mensuales que coinciden con el día del mes de este día
   const obtenerNotaMensualDelDia = (dia, anio = anioActual) => {
     const fecha = obtenerFechaDiaPorAnio(dia, anio)
     const dayOfMonth = new Date(fecha + "T00:00:00").getDate()
-    return tareas.find(t => t.tipo === "nota" && t.repetirMensualmente && t.diaMes === dayOfMonth) || null
+    return tareas.filter(t => t.tipo === "nota" && t.repetirMensualmente && t.diaMes === dayOfMonth)
   };
 
   // Verificar si este día cae dentro del rango de antelación de alguna nota
@@ -159,7 +165,7 @@ function VisualizacionDias({
       return { "habito-fin": "bg-purple-500", "nota": "bg-blue-500" }[fechaImportante.tipo] || "bg-yellow-500";
     }
 
-    if (obtenerNotaMensualDelDia(dia, anio)) {
+    if (obtenerNotaMensualDelDia(dia, anio).length > 0) {
       const hoy = new Date().toISOString().split("T")[0];
       if (obtenerFechaDiaPorAnio(dia, anio) >= hoy) return "bg-violet-500";
     }
@@ -181,39 +187,37 @@ function VisualizacionDias({
   };
 
 
-  // Devuelve { dia: string, mensaje: string } para el tooltip
+  // Devuelve { dia: string, mensajes: string[] } para el tooltip
   const obtenerDatosTooltip = (dia, anio = anioActual) => {
-    const fechaImportante = obtenerInfoFechaImportante(dia, anio);
+    const fechasImp = obtenerInfoFechasImportantes(dia, anio);
     const date = new Date(anio, 0);
     date.setDate(dia);
     const fecha = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
-    let mensaje = "";
+    const mensajes = [];
 
-    if (fechaImportante?.titulo) {
-      mensaje = fechaImportante.titulo
+    fechasImp.forEach(fi => {
+      const titulo = fi.titulo
         .replace(/^Fin de hábito:\s*/i, "")
         .replace(/^Fin de nota:\s*/i, "");
-    }
+      if (titulo && !mensajes.includes(titulo)) mensajes.push(titulo);
+    });
 
-    const notaMensual = obtenerNotaMensualDelDia(dia, anio);
-    if (notaMensual && !mensaje) {
-      mensaje = notaMensual.titulo;
-    }
+    obtenerNotaMensualDelDia(dia, anio).forEach(nota => {
+      if (nota.titulo && !mensajes.includes(nota.titulo)) mensajes.push(nota.titulo);
+    });
 
     if (typeof window !== "undefined") {
       const fechaPartida = localStorage.getItem("fechaPartidaUsuario");
-      if (fechaPartida && fecha === fechaPartida) {
-        mensaje = mensaje ? `${mensaje} · Inicio` : "Inicio";
-      }
+      if (fechaPartida && fecha === fechaPartida) mensajes.push("Inicio");
       try {
         const datos = JSON.parse(localStorage.getItem("datos-dias-porcentajes") || "[]");
         const extra = datos.find(d => d.fecha === fecha);
-        if (extra?.mensaje) mensaje = mensaje ? `${mensaje} · ${extra.mensaje}` : extra.mensaje;
+        if (extra?.mensaje && !mensajes.includes(extra.mensaje)) mensajes.push(extra.mensaje);
       } catch {}
     }
 
-    return { dia: `Día ${dia}`, mensaje };
+    return { dia: `Día ${dia}`, mensajes };
   };
 
 
@@ -243,7 +247,12 @@ function VisualizacionDias({
                   setAnioHover(null);
                 }}
                 onClick={() => {
-                  if (obtenerNotaMensualDelDia(dia, anio)) {
+                  if (obtenerNotaMensualDelDia(dia, anio).length > 0) {
+                    setVistaActiva("notas");
+                    return;
+                  }
+                  const fechasImp = obtenerInfoFechasImportantes(dia, anio);
+                  if (fechasImp.some(f => f.tipo === "nota")) {
                     setVistaActiva("notas");
                     return;
                   }
@@ -261,11 +270,13 @@ function VisualizacionDias({
                 {diaHover === dia && anioHover === anio && (
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-xs text-white rounded whitespace-nowrap z-50 text-center">
                     {(() => {
-                      const { dia: label, mensaje } = obtenerDatosTooltip(dia, anio);
+                      const { dia: label, mensajes } = obtenerDatosTooltip(dia, anio);
                       return (
                         <>
                           <div>{label}</div>
-                          {mensaje && <div className="text-white/60 mt-0.5">{mensaje}</div>}
+                          {mensajes.map((m, i) => (
+                            <div key={i} className="text-white/60 mt-0.5">{m}</div>
+                          ))}
                         </>
                       );
                     })()}

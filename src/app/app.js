@@ -6,7 +6,6 @@ import Chat from "@/components/visualization/Chat"
 import Encabezado from "@/components/layout/Encabezado"
 import MenuLateral from "@/components/layout/MenuLateral"
 import TopUsuarios from "@/components/visualization/TopUsuarios"
-import DashboardEstadisticas from "@/components/visualization/DashboardEstadisticas"
 import TaskCard from "@/components/ui/TaskCard"
 import VistaSemanal from "@/components/visualization/VistaSemanal"
 import VisualizacionDias from "@/components/visualization/VisualizacionDias"
@@ -167,9 +166,16 @@ function App() {
     switch (vistaActiva) {
       case "notas": {
         const notas = validas.filter(t => t.tipo === "nota")
-        if (filtroNotas === "con-fecha") return notas.filter(t => t.fechaFin)
+        const ordenarPorFecha = (arr) =>
+          [...arr].sort((a, b) => {
+            if (!a.fechaFin && !b.fechaFin) return 0
+            if (!a.fechaFin) return 1
+            if (!b.fechaFin) return -1
+            return new Date(a.fechaFin) - new Date(b.fechaFin)
+          })
+        if (filtroNotas === "con-fecha") return ordenarPorFecha(notas.filter(t => t.fechaFin))
         if (filtroNotas === "sin-fecha") return notas.filter(t => !t.fechaFin)
-        return notas
+        return ordenarPorFecha(notas)
       }
       case "calendario":
         return fechaSeleccionada
@@ -276,8 +282,6 @@ function App() {
                     />
                   ) : vistaActiva === "Objetivo" ? (
                     <Chat />
-                  ) : vistaActiva === "estadisticas" ? (
-                    <DashboardEstadisticas />
                   ) : (
                     <div className="flex flex-col md:flex-row gap-4">
                       <div className="flex-1 relative">
